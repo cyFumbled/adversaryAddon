@@ -2,9 +2,6 @@
 	"texture_data": {
 		"cosmeticform": {
 			"textures": "textures/items/cosmeticform.png"
-		},
-		"rhizomatic": {
-			"textures": "textures/items/rhizomatic"
 		}
 	},
 	"resource_pack_name": "aa",

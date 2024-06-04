@@ -1,12 +1,3 @@
-tile.aa_0.0.1:stone_sheet.name=Stone Sheet
-tile.aa_0.0.3:deepslate_tiles_edit01.name=Deepslate Tiles Edit 01
-item.aa_0.0.1:rhizomatic.name=Music Disc
-item.aa_0.0.2:hailstone=Hailstone
-item.aa_0.0.2:plunge=Plunge
-item.aa_0.0.3:queueExit=Exit Queue
-entity.aa_0.0.2:hailstone_entity.name=Hailing Hailstone
-item.aa_0.0.4:bid.a=bid.a
-item.aa_0.0.4:bid.b=bid.b
 entity.aa_0.0.4:transporternpc.name=TransporterNpc
 item.spawn_egg.entity.aa_0.0.4:transporternpc.name=Spawn TransporterNpc
 entity.aa_0.0.4:transportnpc.display.name=transportNpc.display

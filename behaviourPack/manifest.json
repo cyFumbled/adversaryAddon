@@ -3,7 +3,7 @@
 	"header": {
 		"name": "AA-0.0.6_BP",
 		"description": "Adversaries Arena Behavior Pack Version 0.0.6",
-		"uuid": "cf3b754b-a126-4eff-9ba6-cab196ee32af",
+		"uuid": "82900d15-cb30-4d84-b103-2cb29c197b73",
 		"version": [1, 0, 6],
 		"min_engine_version": [1, 20, 51]
 	},
@@ -19,12 +19,12 @@
 		{
 			"description": "Data Module",
 			"version": [1, 0, 0],
-			"uuid": "c1bb3058-a59c-4ddf-9d08-fff2e782b673",
+			"uuid": "ade225f8-0b55-47ad-8ee0-ec95544ba6a1",
 			"type": "data"
 		},
 		{
 			"type": "script",
-			"uuid": "239c134f-67bf-4738-9bcc-8c69d31b1f72",
+			"uuid": "b20f71e7-e00d-41ae-a7c3-52d7032a935c",
 			"version": [1, 0, 0],
 			"language": "javascript",
 			"entry": "scripts/main.js"

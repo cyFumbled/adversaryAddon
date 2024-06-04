@@ -1,9 +1,9 @@
 {
 	"format_version": 2,
 	"header": {
-		"name": "AA-0.0.6_RP",
+		"name": "AA-0.0._RP",
 		"description": "Adversaries Arena Resource Pack Version 0.0.6",
-		"uuid": "beb5699d-3e16-4ee8-bcbe-fa587218f320",
+		"uuid": "4cf98d22-a323-47fa-8ff6-6af14199f0c0",
 		"version": [1, 0, 6],
 		"min_engine_version": [1, 20, 50]
 	},
@@ -19,7 +19,7 @@
 		{
 			"description": "Resouce Module",
 			"version": [1, 0, 0],
-			"uuid": "2ebec6f6-d652-411c-87d6-95011d77385a",
+			"uuid": "e7b2bf2b-e2bc-4c4d-80b7-251bb7fe055a",
 			"type": "resources"
 		}
 	]
