@@ -1,0 +1,13 @@
+{ 
+  "format_version": "1.19.50", 
+  "minecraft:camera_preset": { 
+    "identifier": "aa_0_0_3:queue_RST_pr", 
+    "inherit_from": "minecraft:free", 
+    "listener":"player",
+    "pos_x": 2, 
+    "pos_y": -56.5, 
+    "pos_z": 100, 
+    "rot_x": 10, 
+    "rot_y": 50 
+  } 
+}

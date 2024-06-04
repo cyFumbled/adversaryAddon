@@ -1,0 +1,46 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "aa_0.0.4:transporternpc",
+			"min_engine_version": "1.8.0",
+			"materials": {
+				"default": "entity_alphatest"
+			},
+			"textures": {
+				"default": "textures/entity/transporternpc"
+			},
+			"animations": {
+				"default_pose": "animation.transporternpc.default_pose",
+				"no_pose": "animation.transporternpc.no_pose",
+				"solemn_pose": "animation.transporternpc.solemn_pose",
+				"athena_pose": "animation.transporternpc.athena_pose",
+				"brandish_pose": "animation.transporternpc.brandish_pose",
+				"honor_pose": "animation.transporternpc.honor_pose",
+				"entertain_pose": "animation.transporternpc.entertain_pose",
+				"salute_pose": "animation.transporternpc.salute_pose",
+				"riposte_pose": "animation.transporternpc.riposte_pose",
+				"zombie_pose": "animation.transporternpc.zombie_pose",
+				"cancan_a_pose": "animation.transporternpc.cancan_a_pose",
+				"cancan_b_pose": "animation.transporternpc.cancan_b_pose",
+				"hero_pose": "animation.transporternpc.hero_pose",
+				"wiggle": "animation.transporternpc.wiggle",
+				"controller.pose": "controller.animation.armor_stand.pose",
+				"controller.wiggling": "controller.animation.armor_stand.wiggle"
+			},
+			"scripts": {
+				"initialize": ["variable.armor_stand.pose_index = 0;", "variable.armor_stand.hurt_time = 0;"],
+				"animate": ["controller.pose", "controller.wiggling"]
+			},
+			"geometry": {
+				"default": "geometry.transporternpc"
+			},
+			"render_controllers": ["controller.render.armor_stand"],
+			"enable_attachables": true,
+			"spawn_egg": {
+				"base_color": "#ffffff",
+				"overlay_color": "#000000"
+			}
+		}
+	}
+}

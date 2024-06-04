@@ -1,0 +1,93 @@
+
+{
+    "format_version":"1.17",
+    "minecraft:npc_dialogue":{
+        "scenes":[
+            {
+                "scene_tag":"trainingInvite",
+                "npc_name":"§2Training Trasnporter",
+                "text":"State your request.",
+                "buttons":[
+                    {
+                        "name":"Compete.",
+                        "commands":[
+                            "execute as @initiator run scriptevent aa:training.joinQueue" 
+                        ]
+                    },
+                    {
+                        "name":"Excuse myself."
+                    }
+                ]
+            },
+            {
+                "scene_tag":"suggestBail",
+                "npc_name":"§2Training Trasnporter",
+                "text": "You're queued. Wish to bail or alter your vote?.",
+                "buttons":[
+                    {
+                        "name":"Bail.",
+                        "commands": [
+                            "execute as @initiator run scriptevent aa:training.leaveQueue"
+                        ]
+                    },
+                    {
+                        "name":"Alter vote.",
+                        "commands": [
+                            "execute as @initiator run scriptevent aa:training.alterVote"
+                        ]
+                    },
+                    {
+                        "name":"Excuse myself."
+                    }
+
+                ]
+            },
+            {
+                "scene_tag":"voteEquipment",
+                "npc_name":"§2Training Trasnporter",
+                "text":"Which method would you prefer equipment provided through?",
+                
+                "buttons":[
+                    {
+                        "name":"Auction.",
+                        "commands":[
+                            "execute as @initiator run scriptevent aa:training.submitVote auction"
+                        ]
+                    },
+                    {
+                        "name":"Kit selection.",
+                        "commands":[
+                            "execute as @initiator run scriptevent aa:training.submitVote kitSelection"
+                        ]
+                    },
+                    {
+                        "name":"No preference."
+                    }
+                ]
+            },
+            {
+                "scene_tag":"workshopInvite",
+                "npc_name":"Workshop Transporter",
+                "text":"State your request.",
+                
+                "buttons":[
+                    {
+                        "name":"Design maps.",
+                        "commands":[
+                            "execute as @initiator run scriptevent aa:workshop.beginDesign"
+                        ]
+                    },
+                    {
+                        "name":"Browse maps.",
+                        "commands":[
+                            "execute as @initiator run scriptevent aa:workshop.beginBrowse"
+                        ]
+                    },
+                    {
+                        "name":"Excuse myself."
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -1,0 +1,46 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "aa:workshoptransporter",
+			"min_engine_version": "1.8.0",
+			"materials": {
+				"default": "entity_alphatest"
+			},
+			"textures": {
+				"default": "textures/entity/workshoptransporter"
+			},
+			"animations": {
+				"default_pose": "animation.workshoptransporter.default_pose",
+				"no_pose": "animation.workshoptransporter.no_pose",
+				"solemn_pose": "animation.workshoptransporter.solemn_pose",
+				"athena_pose": "animation.workshoptransporter.athena_pose",
+				"brandish_pose": "animation.workshoptransporter.brandish_pose",
+				"honor_pose": "animation.workshoptransporter.honor_pose",
+				"entertain_pose": "animation.workshoptransporter.entertain_pose",
+				"salute_pose": "animation.workshoptransporter.salute_pose",
+				"riposte_pose": "animation.workshoptransporter.riposte_pose",
+				"zombie_pose": "animation.workshoptransporter.zombie_pose",
+				"cancan_a_pose": "animation.workshoptransporter.cancan_a_pose",
+				"cancan_b_pose": "animation.workshoptransporter.cancan_b_pose",
+				"hero_pose": "animation.workshoptransporter.hero_pose",
+				"wiggle": "animation.workshoptransporter.wiggle",
+				"controller.pose": "controller.animation.armor_stand.pose",
+				"controller.wiggling": "controller.animation.armor_stand.wiggle"
+			},
+			"scripts": {
+				"initialize": ["variable.armor_stand.pose_index = 0;", "variable.armor_stand.hurt_time = 0;"],
+				"animate": ["controller.pose", "controller.wiggling"]
+			},
+			"geometry": {
+				"default": "geometry.workshoptransporter"
+			},
+			"render_controllers": ["controller.render.armor_stand"],
+			"enable_attachables": true,
+			"spawn_egg": {
+				"base_color": "#ffffff",
+				"overlay_color": "#f3177f"
+			}
+		}
+	}
+}

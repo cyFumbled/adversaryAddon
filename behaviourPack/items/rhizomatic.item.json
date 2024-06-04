@@ -1,0 +1,30 @@
+{
+	"format_version": "1.16.1",
+	"minecraft:item": {
+		"description": {
+			"identifier": "aa_0.0.1:rhizomatic",
+			"category": "items"
+		},
+		"components": {
+            "minecraft:record": {
+                "comparator_signal": 1,
+                "duration": 100,
+                "sound_event": "cat"
+            },
+			"minecraft:on_use_on": {
+					"on_use_on": {
+						"event": "aa_0.0.1:playrecord",
+						"target": "jukebox"
+					}
+			}
+		},
+		"events": {
+			"aa_0.0.1:playrecord" : {
+				"run_command": {
+					"command" : ["playsound record.rhizomatic @s ~ ~ ~"],
+					"target" : "jukebox"
+				}
+			}
+		}
+	}
+}

@@ -1,0 +1,9 @@
+execute if entity @s[tag=devPerms] run tellraw @a {"rawtext":[{"selector":"@s"},{"text":"§7 activated developer script: §4 EnforceDevPermissions"}]}
+execute if entity @s[tag=!devPerms] run tellraw @a {"rawtext":[{"text":"§4§lWARNINING: §ruser §4"},{"selector":"@s"},{"text":"§r attempted to activated developer script: §4 EnforceDevPermissions"}]}
+execute if entity @s[tag=devPerms] run effect @s night_vision 999 1 true
+execute if entity @s[tag=devPerms] run gamemode c @s
+execute if entity @s[tag=devPerms] run camera @s clear
+execute if entity @s[tag=devPerms] run inputpermission set @s movement enabled
+execute if entity @s[tag=devPerms] run inputpermission set @s camera enabled
+execute if entity @s[tag=devPerms] run gamerule commandBlockOutput true
+execute if entity @s[tag=devPerms] run gamerule sendCommandFeedback true

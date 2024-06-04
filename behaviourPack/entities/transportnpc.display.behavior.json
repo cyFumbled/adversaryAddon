@@ -1,0 +1,32 @@
+{
+	"format_version": "1.16.100",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "aa_0.0.4:transportnpc.display",
+			"is_spawnable": true,
+			"is_summonable": true,
+			"is_experimental": false
+		},
+		"components": {
+			"minecraft:npc": {},
+			"minecraft:physics": {
+				"has_gravity": true,
+				"has_collision": true
+			},
+			"minecraft:pushable": {
+				"is_pushable": false
+			},
+			"minecraft:knockback_resistance": {
+				"value": 1
+			},
+			"minecraft:nameable": {
+				"always_show": false,
+				"allow_name_tag_renaming": false
+			  },
+			"minecraft:persistent": {},
+			"minecraft:push_through": {
+				"value": 1
+			}
+		}
+	}
+}

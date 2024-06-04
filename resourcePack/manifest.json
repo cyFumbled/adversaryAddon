@@ -1,0 +1,26 @@
+{
+	"format_version": 2,
+	"header": {
+		"name": "AA-0.0.6_RP",
+		"description": "Adversaries Arena Resource Pack Version 0.0.6",
+		"uuid": "beb5699d-3e16-4ee8-bcbe-fa587218f320",
+		"version": [1, 0, 6],
+		"min_engine_version": [1, 20, 50]
+	},
+	"metadata": {
+		"authors": ["Adversary"],
+		"generated_with": {
+			"blockbench_block_wizard": ["1.1.2", "1.2.1"],
+			"blockbench_item_wizard": ["1.0.2"],
+			"blockbench_entity_wizard": ["1.3.1"]
+		}
+	},
+	"modules": [
+		{
+			"description": "Resouce Module",
+			"version": [1, 0, 0],
+			"uuid": "2ebec6f6-d652-411c-87d6-95011d77385a",
+			"type": "resources"
+		}
+	]
+}

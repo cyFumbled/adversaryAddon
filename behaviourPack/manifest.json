@@ -1,0 +1,44 @@
+{
+	"format_version": 2,
+	"header": {
+		"name": "AA-0.0.6_BP",
+		"description": "Adversaries Arena Behavior Pack Version 0.0.6",
+		"uuid": "cf3b754b-a126-4eff-9ba6-cab196ee32af",
+		"version": [1, 0, 6],
+		"min_engine_version": [1, 20, 51]
+	},
+	"metadata": {
+		"authors": ["Adversary"],
+		"generated_with": {
+			"blockbench_block_wizard": ["1.1.2", "1.2.1"],
+			"blockbench_item_wizard": ["1.0.2"],
+			"blockbench_entity_wizard": ["1.3.1"]
+		}
+	},
+	"modules": [
+		{
+			"description": "Data Module",
+			"version": [1, 0, 0],
+			"uuid": "c1bb3058-a59c-4ddf-9d08-fff2e782b673",
+			"type": "data"
+		},
+		{
+			"type": "script",
+			"uuid": "239c134f-67bf-4738-9bcc-8c69d31b1f72",
+			"version": [1, 0, 0],
+			"language": "javascript",
+			"entry": "scripts/main.js"
+		}
+	],
+	"capabilities": ["script_eval"],
+	"dependencies": [
+		{
+			"module_name": "@minecraft/server",
+			"version": "1.11.0-beta"
+		},
+		{
+			"module_name": "@minecraft/server-ui",
+			"version": "1.2.0-beta"
+		}
+	]
+}

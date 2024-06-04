@@ -1,0 +1,22 @@
+{
+	"format_version": "1.10.0",
+	"minecraft:client_entity": {
+		"description": {
+			"identifier": "aa_0.0.4:transportnpc.display",
+			"materials": {
+				"default": "entity_alphatest"
+			},
+			"textures": {
+				"default": "textures/entity/transportnpc.display"
+			},
+			"geometry": {
+				"default": "geometry.transportnpc.display"
+			},
+			"render_controllers": ["controller.render.default"],
+			"spawn_egg": {
+				"base_color": "#009505",
+				"overlay_color": "#002a05"
+			}
+		}
+	}
+}

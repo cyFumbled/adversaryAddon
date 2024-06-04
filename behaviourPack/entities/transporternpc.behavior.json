@@ -1,0 +1,35 @@
+{
+	"format_version": "1.16.210",
+	"minecraft:entity": {
+		"description": {
+			"identifier": "aa_0.0.4:transporternpc",
+			"runtime_identifier": "minecraft:armor_stand",
+			"is_spawnable": true,
+			"is_summonable": true,
+			"is_experimental": false
+		},
+		"components": {
+			"minecraft:type_family": {
+				"family": ["armor_stand", "inanimate", "mob", "npc"]
+			},
+			"minecraft:collision_box": {
+				"width": 0.5,
+				"height": 1.975
+			},
+			"minecraft:health": {
+				"value": 1,
+				"max": 1
+			},
+			"minecraft:knockback_resistance": {
+				"value": 1
+			},
+			"minecraft:nameable": {
+				"always_show": false,
+				"allow_name_tag_renaming": true
+			  },
+			"minecraft:persistent": {},
+			"minecraft:conditional_bandwidth_optimization": {}
+		},
+		"events": {}
+	}
+}

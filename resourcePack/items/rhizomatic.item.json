@@ -1,0 +1,11 @@
+{
+    "format_version": "1.16.1",
+    "minecraft:item": {
+      "description": {
+        "identifier": "aa_0.0.1:rhizomatic"
+      },
+      "components": {
+        "minecraft:icon": "rhizomatic"
+      }
+    }
+  }
