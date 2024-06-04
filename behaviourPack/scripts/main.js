@@ -6,7 +6,7 @@ import { ModalFormData } from "@minecraft/server-ui";
 let commandHandler = {
     commandReference : {
         'clearpd' : {
-            requiredPermissionLevel: 1, code: (player) => {
+            requiredPermissionLevel: 1, code: ({source: player}) => {
                 factoryResetPersonalSessionData(player.name)
                 assignPlayerLabel(player)
                 syncPlayerData(player.name,'session') 
@@ -15,8 +15,33 @@ let commandHandler = {
             requiredPermissionLevel: 1, code: () => {
                 taskManagement.clearTasks();
             }},
+        'createVacantWorkshop' : {
+            requiredPermissionLevel: 1, code : ({parameters : [size]}) => {
+                size = Number(size)
+                console.warn('size: ' + size)
+                const nextNWPos = JSON.parse(world.getDynamicProperty('nextNWPos'));
+                const southeastPos = {x : nextNWPos.x + size, y : nextNWPos.y + size, z : nextNWPos.z + size}
+                console.warn(JSON.stringify(southeastPos))
+                workshopManagementSystem.createSite(nextNWPos,{x : nextNWPos.x + size, y : nextNWPos.y + size, z : nextNWPos.z + size},'aa:workshopborder',16)
+                console.warn('test33')
+                workshopManagementSystem.vacantWorkshops.push({
+                    key: world.getDynamicProperty('highestWorkshopKey'),
+                    privacy : 'private',
+                    archivePos : {
+                        northWest : nextNWPos,
+                        southEast : southeastPos
+                    }
+                })
+
+                world.setDynamicProperty('vacantWorkshops',JSON.stringify(workshopManagementSystem.vacantWorkshops))
+                world.setDynamicProperty('nextNWPos',JSON.stringify({x : nextNWPos.x, y: nextNWPos.y, z: nextNWPos.z + Number(size) + 100}))
+                world.setDynamicProperty('highestWorkshopKey',world.getDynamicProperty('highestWorkshopKey') + 1)
+            
+
+            }
+        },
         'createsite' : {
-            requiredPermissionLevel: 1, code: ({source,parameters}) => {
+            requiredPermissionLevel: 1, code: ({parameters}) => {
                 workshopManagementSystem.createSite(
                     {
                         'x':Number(parameters[0]),
@@ -32,8 +57,13 @@ let commandHandler = {
                     parameters[7]
                 )
             }},
+        'debugWorkshopData' : {
+            requiredPermissionLevel: 1, code : () => {
+                console.warn('highest key: ' + world.getDynamicProperty('highestWorkshopKey') + ' nextNWPos : ' + world.getDynamicProperty('nextNWPos') + '\nvacant workshops: ' + world.getDynamicProperty('vacantWorkshops'))
+            }
+        }, 
         'displaypd' : {
-            requiredPermissionLevel: 1, code: (player) => {
+            requiredPermissionLevel: 1, code: ({source : player}) => {
                 console.warn(`\nDynamic Property Player Data: §b${world.getDynamicProperty(player.name)}§r
                 \nActive Session Player Data: §b${JSON.stringify(sessionPlayerData[player.name])}§r
                 \nIs Player Dp undefined: §b${world.getDynamicProperty(player.name) === undefined}`);
@@ -43,14 +73,20 @@ let commandHandler = {
                 console.warn(`Dynamic Property Byte Count: ${world.getDynamicPropertyTotalByteCount()}`);
             }},
         'gmc' : {
-            requiredPermissionLevel: 1, code: ({source}) => {
-                console.warn(source.name)
-                world.getDimension('overworld').runCommandAsync(`gamemode c ${source.name}`);
+            requiredPermissionLevel: 1, code: ({source: player}) => {
+                console.warn(player.name)
+                world.getDimension('overworld').runCommandAsync(`gamemode c ${player.name}`);
             }},
         'gms' : {
-            requiredPermissionLevel: 1, code: (player) => {
+            requiredPermissionLevel: 1, code: ({source: player}) => {
                 world.getDimension('overworld').runCommandAsync(`gamemode s ${player.name}`);
             }},
+        'logMap': {
+            requiredPermissionLevel: 1, code: ({parameters}) => {
+                if (parameters[0] === 'all' || !parameters[0]) console.warn(world.getDynamicProperty('mapList'));
+                else console.warn(world.getDynamicProperty(parameters[0]));
+            }
+        },
         'logmaplist' : {
             requiredPermissionLevel: 1, code: () => {
                 uploadMapData({
@@ -85,25 +121,40 @@ let commandHandler = {
                 console.warn(chatHandler.deliverMessage('Debug Sys', 'global', JSON.stringify(downloadMapData('Alloy Station'))));
             }},
         'openownershipForm' : {
-            requiredPermissionLevel: 1, code: (player) => {
+            requiredPermissionLevel: 1, code: ({source: player}) => {
                 system.run(() => workshopManagementSystem.showOwnershipForm(player));
             }},
         'posworkshopnpc' : {
-            requiredPermissionLevel: 1, code: (player) => {
+            requiredPermissionLevel: 1, code: ({source: player}) => {
                 player.runCommandAsync(`tp @s 202 -57 88 facing  204 -58 88`)
             }},
         'prefix' : {
-            requiredPermissionLevel: 1, code: (player,parameters) => {
+            requiredPermissionLevel: 1, code: ({source: player},parameters) => {
                 sessionPlayerData[player.name].prefix = parameters[0];
                 player.runCommandAsync(`tellraw @s {"rawtext":[{"text":"§8Active Prefix: §b${sessionPlayerData[player.name].prefix}"}]}`);
                 syncPlayerData(player.name,'session')
                 console.warn(`${player.name}'s active prefix: §b${sessionPlayerData[player.name].prefix}`);
             }},
         'reloadlabel' : {
-            requiredPermissionLevel: 1, code: (player) => {
+            requiredPermissionLevel: 1, code: ({source: player}) => {
                 system.run(assignPlayerLabel(player));
                 console.warn(`Nametag: ${player.nameTag}`);
             }},
+        'removeMap' : {
+            requiredPermissionLevel: 1, code : ({parameters : [mapId]}) => {
+                const mapName = mapId.replace('_', ' ')
+
+            console.warn(JSON.parse(world.getDynamicProperty('mapList'))[mapName])
+            world.setDynamicProperty(JSON.parse(world.getDynamicProperty('mapList'))[mapName],undefined)
+            console.warn(JSON.parse(world.getDynamicProperty('mapList'))[mapName])
+            let mapList = JSON.parse(world.getDynamicProperty('mapList'))
+            delete mapList[mapName]
+            console.warn(JSON.stringify(mapList))
+            world.setDynamicProperty('mapList',JSON.stringify(mapList))
+        
+
+            }
+        },
         'runjs' : {
             requiredPermissionLevel: 1, code: () => {
                 let code = '';
@@ -118,10 +169,10 @@ let commandHandler = {
                 syncPlayerData(player.name,'session');
             }},
         'setstation' : {
-            requiredPermissionLevel: 1, code: (player,parameters) => {
+            requiredPermissionLevel: 1, code: ({source: player},parameters) => {
                 if (parameters.length < 2) system.run(setStation(player, parameters[0]));
                 else  setStation(world.getPlayers({ name:parameters[1]})[0], parameters[0]);
-            }},
+            }}
     },
 
     parseChatMessage : (prefix,message) => {
@@ -311,59 +362,13 @@ let taskManagement = {
 
 let workshopManagementSystem = {
     activeWorkshops : {},
-    vacantWorkshops : [2],
-    HighestKey: 1,
-    NextNWPos: {
-        x: 800,
-        y: 0,
-        z: 1000
-    },
-    workShops : {
-        'Alloy Station' : {
-            id: 'Alloy_Station',
-            title: 'Alloy Station',
-            key: 1,
-            owner: 'TornAlloy808450',
-            builders : ['TornAlloy808450'],
-            privacy : 'public',
-            passcode : '60',
-            developmentaState : 'unreleased',
-            mapVersion : '0.1',
-            creationVersion : '0.0.5',
-            compatableGamemodes : ['training'],
-            archivePos : {
-                northWest : {
-                    x:800,
-                    y:0,
-                    z:800
-                },
-                southEast : {
-                    x:900,
-                    y:200,
-                    z:900
-                }
-            }
-        },
-        'vacant2' : {
-            key: 2,
-            privacy : 'private',
-            archivePos : {
-                northWest : {
-                    x:800,
-                    y:0,
-                    z:1000
-                },
-                southEast : {
-                    x:900,
-                    y:100,
-                    z:1100
-                }
-            }
-        }
-    },
+    vacantWorkshops : [],
+    workShops : {},
     
 
     showOwnershipForm : function (player) {
+
+
 
         const form = new ModalFormData();
         form.textField(`Map Name`,`${player.name}'s Map`)
@@ -380,7 +385,8 @@ let workshopManagementSystem = {
                 }
                 return;
             }
-            
+
+            this.vacantWorkshops = JSON.parse(world.getDynamicProperty('vacantWorkshops'))
             let [mapName, mapSize, passcode, privacyToggle,builders] = r.formValues
             mapSize = [`100x 100y 100z`,`200x 200y 200z`][mapSize]
                 
@@ -404,8 +410,10 @@ let workshopManagementSystem = {
 
                 else if (this.vacantWorkshops.length > 0) {
                     
-                    const targetKey = this.vacantWorkshops[0]
-                    this.vacantWorkshops.shift
+                    const targetKey = this.vacantWorkshops[0].key
+                    const targetWorkshop = this.vacantWorkshops.shift()
+
+                    world.setDynamicProperty('vacantWorkshops',JSON.stringify(this.vacantWorkshops))
 
                     this.workShops[mapName.replace(' ', '_')] = {
                         id: mapName.replace(' ', '_'),
@@ -419,11 +427,10 @@ let workshopManagementSystem = {
                         mapVersion : '0.1',
                         creationVersion : '0.0.6',
                         compatableGamemodes : ['training'],
-                        archivePos : this.workShops[`vacant${targetKey}`].archivePos
+                        archivePos : targetWorkshop.archivePos
                     }
                     uploadMapData(this.workShops[mapName.replace(' ', '_')]);
 
-                    delete this.workShops[`vacant${targetKey}`]
                     this.activeWorkshops[player.name] = mapName.replace(' ', '_');
 
                     let bounds = this.workShops[this.activeWorkshops[player.name]].archivePos;
@@ -436,10 +443,20 @@ let workshopManagementSystem = {
 
                 }
                 else if (this.vacantWorkshops.length < 1) {
+
+                    const nextNWPos = JSON.parse(world.getDynamicProperty('nextNWPos'))
+
+                    world.setDynamicProperty('nextNWPos',JSON.stringify({
+                        x: nextNWPos.x,
+                        y: nextNWPos.y,
+                        z: nextNWPos.z + Number(mapSize.slice(Number(mapSize.indexOf('y'))+1,Number(mapSize.indexOf('z')))) + 100
+
+                    }))
+
                     world.getPlayers({ name:player.name})[0].teleport({
-                        x: this.NextNWPos.x + Number(mapSize.slice(0,Number(mapSize.indexOf('x')))) / 2, 
-                        y: this.NextNWPos.y + Number(mapSize.slice(Number(mapSize.indexOf('x'))+1,Number(mapSize.indexOf('y')))) / 2,
-                        z: this.NextNWPos.z + Number(mapSize.slice(Number(mapSize.indexOf('y'))+1,Number(mapSize.indexOf('z')))) / 2
+                        x: nextNWPos.x + Number(mapSize.slice(0,Number(mapSize.indexOf('x')))) / 2, 
+                        y: nextNWPos.y + Number(mapSize.slice(Number(mapSize.indexOf('x'))+1,Number(mapSize.indexOf('y')))) / 2,
+                        z: nextNWPos.z + Number(mapSize.slice(Number(mapSize.indexOf('y'))+1,Number(mapSize.indexOf('z')))) / 2
                     }) 
                 system.runTimeout(() => 
                     {
@@ -450,7 +467,7 @@ let workshopManagementSystem = {
                         this.workShops[mapName.replace(' ', '_')] = {
                             id: mapName.replace(' ', '_'),
                             title: mapName,
-                            key : this.HighestKey + 1,
+                            key : world.getDynamicProperty('highestWorkshopKey') + 1,
                             owner: player.name,
                             builders: [player.name],
                                 privacy: !privacyToggle,
@@ -461,30 +478,25 @@ let workshopManagementSystem = {
                                 compatableGamemodes : ['training'],
                                 archivePos : { 
                                     northWest :{
-                                        x: this.NextNWPos.x,
-                                        y: this.NextNWPos.y,
-                                        z: this.NextNWPos.z
+                                        x: nextNWPos.x,
+                                        y: nextNWPos.y,
+                                        z: nextNWPos.z
                                     },
                                     southEast : {
-                                        x: this.NextNWPos.x + Number(mapSize.slice(0,Number(mapSize.indexOf('x')))),
-                                        y: this.NextNWPos.y + Number(mapSize.slice(Number(mapSize.indexOf('x'))+1,Number(mapSize.indexOf('y')))),
-                                        z: this.NextNWPos.z + Number(mapSize.slice(Number(mapSize.indexOf('y'))+1,Number(mapSize.indexOf('z'))))
+                                        x: nextNWPos.x + Number(mapSize.slice(0,Number(mapSize.indexOf('x')))),
+                                        y: nextNWPos.y + Number(mapSize.slice(Number(mapSize.indexOf('x'))+1,Number(mapSize.indexOf('y')))),
+                                        z: nextNWPos.z + Number(mapSize.slice(Number(mapSize.indexOf('y'))+1,Number(mapSize.indexOf('z'))))
                                     }
                                 }
                             }
                             uploadMapData(this.workShops[mapName.replace(' ', '_')])
-                            console.warn('size: '+Number(mapSize.slice(0,Number(mapSize.indexOf('x')))) + '...' + Number(this.NextNWPos.x) + Number(mapSize.slice(0,Number(mapSize.indexOf('x')))))
+                            console.warn('size: '+Number(mapSize.slice(0,Number(mapSize.indexOf('x')))) + '...' + Number(nextNWPos.x) + Number(mapSize.slice(0,Number(mapSize.indexOf('x')))))
                             console.warn()
                             this.activeWorkshops[player.name] = mapName.replace(' ', '_');
                             console.warn(`NW.x: ${this.workShops[this.activeWorkshops[player.name]].archivePos.northWest.x} SE.x: ${this.workShops[this.activeWorkshops[player.name]].archivePos.southEast.x}` )
                             
-                            this.HighestKey++;
-                            this.NextNWPos = {
-                                x: this.NextNWPos.x,
-                                y: this.NextNWPos.y,
-                                z: this.NextNWPos.z + Number(mapSize.slice(Number(mapSize.indexOf('y'))+1,Number(mapSize.indexOf('z')))) + 100
-
-                            }
+                            world.setDynamicProperty('highestWorkshopKey',world.getDynamicProperty('highestWorkshopKey') + 1)
+                           
 
                         
                             
@@ -1138,6 +1150,8 @@ world.afterEvents.playerPlaceBlock.subscribe(eventData => {
     }
 })
 
+
+
 // Secures data when reloading scripts
 for(const player of world.getPlayers()){
     if (world.getDynamicProperty(player.name) === undefined) {
@@ -1160,6 +1174,23 @@ for(const player of world.getPlayers()){
 
     }
 };
+//world.setDynamicProperty('mapList',JSON.stringify({"Alloy Station":"Alloy_Station","map2":"map2"}))
+
+
+console.warn(workshopManagementSystem.vacantWorkshops)
+
+world.setDynamicProperty('highestWorkshopKey',5)
+world.setDynamicProperty('nextNWPos',JSON.stringify({x:900,y:0,z:1400}))
+for(const [key,value] of Object.entries(JSON.parse(world.getDynamicProperty('mapList')))) {
+    console.warn(value)
+    console.warn(world.getDynamicProperty(value))
+    workshopManagementSystem.workShops[key] = JSON.parse(world.getDynamicProperty(value));
+    console.warn(JSON.stringify(workshopManagementSystem.workShops));
+}
+
+workshopManagementSystem.vacantWorkshops = JSON.parse(world.getDynamicProperty('vacantWorkshops'))
+
+console.warn()
 
 system.runInterval(() => {
     if (stations.mapWorkshop.players.length > 0) {
@@ -1167,6 +1198,8 @@ system.runInterval(() => {
         workshopManagementSystem.enforceBounds('interval')
         
     }
+
+   
 
     // for(const player of world.getPlayers()){}
 },40)
