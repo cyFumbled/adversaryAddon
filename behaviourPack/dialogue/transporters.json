@@ -68,23 +68,26 @@
             {
                 "scene_tag":"workshopInvite",
                 "npc_name":"Workshop Transporter",
-                "text":"State your request.",
+                "text":"Wish to build a map, modify a map's metadata, or browse the public map catalog?",
                 
                 "buttons":[
                     {
-                        "name":"Design maps.",
+                        "name":"Design a map.",
                         "commands":[
-                            "execute as @initiator run scriptevent aa:workshop.beginDesign"
+                            "execute as @initiator run scriptevent aa:workshop.build"
                         ]
                     },
                     {
-                        "name":"Browse maps.",
+                        "name":"Modify Metadata.",
                         "commands":[
-                            "execute as @initiator run scriptevent aa:workshop.beginBrowse"
+                            "execute as @initiator run scriptevent aa:workshop.modify"
                         ]
                     },
                     {
-                        "name":"Excuse myself."
+                        "name":"Browse catalog.",
+                        "commands":[
+                            "execute as @initiator run scriptevent aa:workshop.browse"
+                        ]
                     }
                 ]
             }

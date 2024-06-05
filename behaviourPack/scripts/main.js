@@ -1,7 +1,7 @@
 'use strict';
 
 import { ItemStack, system , world } from "@minecraft/server";
-import { ModalFormData } from "@minecraft/server-ui";
+import { ModalFormData, ActionFormData } from "@minecraft/server-ui";
 
 let commandHandler = {
     commandReference : {
@@ -360,11 +360,44 @@ let taskManagement = {
 
 }
 
+//Debug
+world.setDynamicProperty(`TornAlloy808450-BuildableMaps`,undefined)
+world.setDynamicProperty(`TornAlloy808450BuildableMaps`,JSON.stringify(['Alloy Station']))
+world.setDynamicProperty(`TornAlloy808450OwnedMaps`,JSON.stringify(['Alloy Station']))
+
 let workshopManagementSystem = {
     activeWorkshops : {},
     vacantWorkshops : [],
     workShops : {},
     
+    showMapForm : function (player,purpose) {
+        const [formBody, sourceList] = (purpose == 'design') 
+            ? ["Select which map you wish to build on.", "BuildableMaps"] 
+            : ["Select which map's metadata you wish to modify.", "OwnedMaps"];
+       
+        const form = new ActionFormData()
+            .title("Build Form")
+            .body(formBody)
+            .button("§r---- §lNew Map §r----");
+           
+        const mapSelection = JSON.parse(world.getDynamicProperty(player.name + sourceList))
+        
+        for (var i = 0; i < mapSelection.length; i++) {
+            form.button(mapSelection[i])
+        }
+        form.show(player).then((response) => {
+            if (response.canceled) {
+                if (response.cancelationReason === 'UserBusy') {
+                    this.showMapForm(player);
+                }
+                return;
+            }
+        const selectedMap = mapSelection[response.selection - 1];
+            console.warn(selectedMap)
+            this.designMap(player,mapSelection)
+        });
+
+    },
 
     showOwnershipForm : function (player) {
 
@@ -397,7 +430,7 @@ let workshopManagementSystem = {
             if (this.workShops[mapName]) {
                     
                     setStation(player,'mapWorkshop')
-                    this.activeWorkshops[player.name] = mapName.replace(' ', '_');
+                    this.activeWorkshops[player.name] = mapName;
 
                     let bounds = this.workShops[this.activeWorkshops[player.name]].archivePos;
 
@@ -431,7 +464,7 @@ let workshopManagementSystem = {
                     }
                     uploadMapData(this.workShops[mapName.replace(' ', '_')]);
 
-                    this.activeWorkshops[player.name] = mapName.replace(' ', '_');
+                    this.activeWorkshops[player.name] = mapName;
 
                     let bounds = this.workShops[this.activeWorkshops[player.name]].archivePos;
 
@@ -492,7 +525,7 @@ let workshopManagementSystem = {
                             uploadMapData(this.workShops[mapName.replace(' ', '_')])
                             console.warn('size: '+Number(mapSize.slice(0,Number(mapSize.indexOf('x')))) + '...' + Number(nextNWPos.x) + Number(mapSize.slice(0,Number(mapSize.indexOf('x')))))
                             console.warn()
-                            this.activeWorkshops[player.name] = mapName.replace(' ', '_');
+                            this.activeWorkshops[player.name] = mapName;
                             console.warn(`NW.x: ${this.workShops[this.activeWorkshops[player.name]].archivePos.northWest.x} SE.x: ${this.workShops[this.activeWorkshops[player.name]].archivePos.southEast.x}` )
                             
                             world.setDynamicProperty('highestWorkshopKey',world.getDynamicProperty('highestWorkshopKey') + 1)
@@ -531,6 +564,22 @@ let workshopManagementSystem = {
         });
 
     },
+
+    designMap : function (player,mapName) {
+
+        setStation(player,'mapWorkshop')
+        this.activeWorkshops[player.name] = mapName;
+        console.warn(JSON.stringify(this.activeWorkshops[player.name]))
+        let bounds = this.workShops[this.activeWorkshops[player.name]].archivePos;
+
+        world.getPlayers({ name:player.name})[0].teleport({
+        x: bounds.northWest.x + (bounds.southEast.x - bounds.northWest.x) / 2, 
+        y: bounds.northWest.y + (bounds.southEast.y - bounds.northWest.y) / 2,
+        z: bounds.northWest.z + (bounds.southEast.z - bounds.northWest.z) / 2
+                }) 
+
+    },
+
 
     boundsCheck : function (pos,name) {
 
@@ -1066,7 +1115,7 @@ world.afterEvents.itemUse.subscribe(eventData => {
     } else if (eventData.itemStack.typeId === "minecraft:brick") {
         // Ensure the player is in the map workshop station before uploading map data.
         if (playerData.station !== 'mapWorkshop') return;
-        uploadMapData();
+        
     }
 });
 
@@ -1110,7 +1159,13 @@ system.afterEvents.scriptEventReceive.subscribe(eventData => {
             trainingHandler.submitVote(eventData.sourceEntity, eventData.message);
             console.warn(`\nQueue: ${trainingHandler.queue}\nAuction voters: ${trainingHandler.auctionVoters}\nKit Voters: ${trainingHandler.kitSelectionVoters}\n`)
             break;
-        case 'aa:workshop.beginDesign' :
+        case 'aa:workshop.build' :
+            workshopManagementSystem.showMapForm(eventData.sourceEntity,'design')
+            break;
+            case 'aa:workshop.modify' :
+            workshopManagementSystem.showMapForm(eventData.sourceEntity,'modify')
+            break;
+            case 'aa:workshop.beginDesign' :
             workshopManagementSystem.showOwnershipForm(world.getPlayers({name:eventData.sourceEntity.name})[0])
         
 
@@ -1177,15 +1232,10 @@ for(const player of world.getPlayers()){
 //world.setDynamicProperty('mapList',JSON.stringify({"Alloy Station":"Alloy_Station","map2":"map2"}))
 
 
-console.warn(workshopManagementSystem.vacantWorkshops)
 
-world.setDynamicProperty('highestWorkshopKey',5)
-world.setDynamicProperty('nextNWPos',JSON.stringify({x:900,y:0,z:1400}))
 for(const [key,value] of Object.entries(JSON.parse(world.getDynamicProperty('mapList')))) {
-    console.warn(value)
-    console.warn(world.getDynamicProperty(value))
     workshopManagementSystem.workShops[key] = JSON.parse(world.getDynamicProperty(value));
-    console.warn(JSON.stringify(workshopManagementSystem.workShops));
+    
 }
 
 workshopManagementSystem.vacantWorkshops = JSON.parse(world.getDynamicProperty('vacantWorkshops'))

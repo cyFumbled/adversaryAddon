@@ -1,2 +1,2 @@
 # adversaryAddon
- Minecraft scripting addon. Currently purposely.
+ Minecraft scripting addon.
