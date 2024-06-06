@@ -360,17 +360,71 @@ let taskManagement = {
 
 }
 
-//Debug
+// Temporary data correction
 world.setDynamicProperty(`TornAlloy808450-BuildableMaps`,undefined)
-world.setDynamicProperty(`TornAlloy808450BuildableMaps`,JSON.stringify(['Alloy Station']))
-world.setDynamicProperty(`TornAlloy808450OwnedMaps`,JSON.stringify(['Alloy Station']))
+world.setDynamicProperty(`TornAlloy808450BuildableMaps`,JSON.stringify(['Alloy Station','map3']))
+world.setDynamicProperty(`TornAlloy808450OwnedMaps`,JSON.stringify(['Alloy Station','map3']))
+
 
 let workshopManagementSystem = {
     activeWorkshops : {},
     vacantWorkshops : [],
     workShops : {},
+    formData : {},
+
+    showForm : function  (player,purpose,sourceMapName) {
+        this.formData[player.name].form.show(player).then(r => {
+                if (r.canceled) {
+                    if (r.cancelationReason === 'UserBusy') this.showForm(player,purpose)
+                    return;
+                }
+            if (purpose === 'design' || purpose === 'modify') {
+            const selectedMap = this.formData[player.name].mapSelection[r.selection - 1];
+            this[`${purpose}Map`](player,selectedMap)
+            this.formData[player.name] = null;
+            }
+            else if (purpose === 'metadata') {
+
+                let [mapName, mapSize, passcode, privacyToggle,builders] = r.formValues
+                mapSize = [`100x 100y 100z`,`200x 200y 200z`][mapSize]
+                
+                mapName = mapName || sourceMapName;
+                builders = builders ? builders.split(':') : [player.name];
+
+                
+
+                this.workShops[mapName.replace(' ', '_')] = {
+                    id: mapName.replace(' ', '_'),
+                    title: mapName,
+                    key : this.workShops[sourceMapName.replace(' ', '_')].key,
+                    owner: player.name,
+                    builders: [builders],
+                    privacy: !privacyToggle,
+                    passcode: passcode,
+                    developmentaState : 'unreleased',
+                    mapVersion : '0.1',
+                    creationVersion : this.workShops[sourceMapName.replace(' ', '_')].creationVersion,
+                    compatableGamemodes : ['training'],
+                    archivePos : this.workShops[sourceMapName.replace(' ', '_')].archivePos
+                }
+                uploadMapData(this.workShops[mapName.replace(' ', '_')]);
+
+                if (mapName !== sourceMapName) {
+
+                    this.workShops[sourceMapName] = null;
+                    world.setDynamicProperty(sourceMapName.replace(' ', '_'),undefined)
+                    let mapList = JSON.parse(world.getDynamicProperty('mapList'))
+                    delete mapList[sourceMapName]
+                    world.setDynamicProperty('mapList',JSON.stringify(mapList))
+                }
+
+            }
+            })
+    },
+
+
     
-    showMapForm : function (player,purpose) {
+    selectMap : function (player,purpose) {
         const [formBody, sourceList] = (purpose == 'design') 
             ? ["Select which map you wish to build on.", "BuildableMaps"] 
             : ["Select which map's metadata you wish to modify.", "OwnedMaps"];
@@ -379,23 +433,30 @@ let workshopManagementSystem = {
             .title("Build Form")
             .body(formBody)
             .button("§r---- §lNew Map §r----");
-           
-        const mapSelection = JSON.parse(world.getDynamicProperty(player.name + sourceList))
         
-        for (var i = 0; i < mapSelection.length; i++) {
-            form.button(mapSelection[i])
+        this.formData[player.name] =  {};
+        this.formData[player.name].mapSelection = JSON.parse(world.getDynamicProperty(player.name + sourceList))
+        
+        for (var i = 0; i < this.formData[player.name].mapSelection.length; i++) {
+            form.button(this.formData[player.name].mapSelection[i])
         }
-        form.show(player).then((response) => {
-            if (response.canceled) {
-                if (response.cancelationReason === 'UserBusy') {
-                    this.showMapForm(player);
-                }
-                return;
-            }
-        const selectedMap = mapSelection[response.selection - 1];
-            console.warn(selectedMap)
-            this.designMap(player,mapSelection)
-        });
+
+        this.formData[player.name].form = form;
+        this.showForm(player,purpose)
+
+    },
+
+    modifyMap : function (player,map) {
+        const form = new ModalFormData();
+        form.textField(`Map Name`,`${player.name}'s Map`)
+        form.dropdown(`Map Size`,[`100x 100y 100z`]);
+        form.textField(`Passcode`,``)
+        form.toggle(`Public?`);
+        form.textField('Builders (names seperated by colons)',`${player.name}:username2`)
+        form.title(`Ownership Form`)
+
+        this.formData[player.name].form = form;
+        this.showForm(player,'metadata',map)
 
     },
 
@@ -1160,10 +1221,10 @@ system.afterEvents.scriptEventReceive.subscribe(eventData => {
             console.warn(`\nQueue: ${trainingHandler.queue}\nAuction voters: ${trainingHandler.auctionVoters}\nKit Voters: ${trainingHandler.kitSelectionVoters}\n`)
             break;
         case 'aa:workshop.build' :
-            workshopManagementSystem.showMapForm(eventData.sourceEntity,'design')
+            workshopManagementSystem.selectMap(eventData.sourceEntity,'design')
             break;
             case 'aa:workshop.modify' :
-            workshopManagementSystem.showMapForm(eventData.sourceEntity,'modify')
+            workshopManagementSystem.selectMap(eventData.sourceEntity,'modify')
             break;
             case 'aa:workshop.beginDesign' :
             workshopManagementSystem.showOwnershipForm(world.getPlayers({name:eventData.sourceEntity.name})[0])
