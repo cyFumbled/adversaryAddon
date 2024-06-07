@@ -429,6 +429,11 @@ let workshopManagementSystem = {
                 }
 
             }
+            else if (purpose === 'browse') {
+                const selectedMap = this.formData[player.name].mapSelection[r.selection];
+                this[`${purpose}Map`](player,selectedMap)
+                this.formData[player.name] = null; 
+            }
             else if (purpose === 'newMap') {
 
                this.vacantWorkshops = JSON.parse(world.getDynamicProperty('vacantWorkshops'))
@@ -573,18 +578,38 @@ let workshopManagementSystem = {
 
     
     selectMap : function (player,purpose) {
-        const [formBody, sourceList] = (purpose == 'design') 
-            ? ["Select which map you wish to build on.", "BuildableMaps"] 
-            : ["Select which map's metadata you wish to modify.", "OwnedMaps"];
-       
+        let purposeData = [];
+        switch (purpose) {
+            case 'design': 
+                purposeData = ["Build Form","Select which map you wish to build on.", "BuildableMaps"]; 
+                break;
+            case 'modify': 
+                 purposeData = ["Modify Form","Select which map you wish to build on.", "BuildableMaps"]; 
+                break;
+            case 'browse': 
+                purposeData = ["Browse Form","Select which map you wish to visit.", "publicMaps"]; 
+                break;
+
+        }
+
+        const [ formTitle, formBody, sourceList ] = purposeData
+        purposeData = null
+         
         const form = new ActionFormData()
-            .title("Build Form")
+            .title(formTitle)
             .body(formBody)
-            .button("§r---- §lNew Map §r----");
         
         this.formData[player.name] =  {};
-        this.formData[player.name].mapSelection = JSON.parse(world.getDynamicProperty(player.name + sourceList))
-        
+
+        if (sourceList === 'publicMaps') {
+         this.formData[player.name].mapSelection = JSON.parse(world.getDynamicProperty(sourceList))
+        }
+
+        else { 
+            form.button("§r---- §lNew Map §r----");
+            this.formData[player.name].mapSelection = JSON.parse(world.getDynamicProperty(player.name + sourceList))
+        }
+
         for (var i = 0; i < this.formData[player.name].mapSelection.length; i++) {
             form.button(this.formData[player.name].mapSelection[i])
         }
@@ -605,6 +630,23 @@ let workshopManagementSystem = {
 
         this.formData[player.name].form = form;
         this.showForm(player,'metadata',map)
+
+    },
+
+    // Curently give the same permissions as design
+    browseMap : function (player,mapName) {
+
+        setStation(player,'mapWorkshop')
+        this.activeWorkshops[player.name] = mapName;
+        console.warn(JSON.stringify(this.activeWorkshops[player.name]))
+        let bounds = this.workShops[this.activeWorkshops[player.name]].archivePos;
+
+        world.getPlayers({ name:player.name})[0].teleport({
+        x: bounds.northWest.x + (bounds.southEast.x - bounds.northWest.x) / 2, 
+        y: bounds.northWest.y + (bounds.southEast.y - bounds.northWest.y) / 2,
+        z: bounds.northWest.z + (bounds.southEast.z - bounds.northWest.z) / 2
+                }) 
+
 
     },
 
@@ -815,9 +857,6 @@ let workshopManagementSystem = {
             let bounds = this.workShops[this.activeWorkshops[playerName]].archivePos;
             
             if (pos.x < (bounds.northWest.x - 10) || pos.x > (bounds.southEast.x + 10) || pos.y < (bounds.northWest.y - 10) || pos.y > (bounds.southEast.y + 10) || pos.z < (bounds.northWest.z - 10) || pos.z > (bounds.southEast.z + 10)) {
-                //console.warn('\nbounds.northWest.x: ' + bounds.northWest.x +'\nbounds.northWest.y: ' + bounds.northWest.y + '\nbounds.northWest.z: ' + bounds.northWest.z +
-                //'\n\nbounds.southEast.x: ' + bounds.southEast.x + '\nbounds.southEast.y: ' + bounds.southEast.y + '\nbounds.southEast.z: ' + bounds.southEast.z
-                //)
                 system.run( () => {world.getPlayers({ name:playerName})[0].teleport({
                     x: bounds.northWest.x + (bounds.southEast.x - bounds.northWest.x) / 2, 
                     y: bounds.northWest.y + (bounds.southEast.y - bounds.northWest.y) / 2,
@@ -829,7 +868,7 @@ let workshopManagementSystem = {
             }
             
             else {
-                console.warn('bounds are fine. Call reason: ' + reason)
+                console.warn(playerName + ' bounds are fine. Call reason: ' + reason)
                 return false;
             }
     }
@@ -1226,46 +1265,39 @@ function assignPlayerLabel(player) {
     world.getPlayers({ name:player.name})[0].nametag = playerData.label
 }
 
-
-world.afterEvents.playerSpawn.subscribe(eventData=> { 
-
-    let { player, initialSpawn } = eventData;
-    if(!initialSpawn) return;
+function loadNewPlayer(player) {
 
     if (world.getDynamicProperty(player.name) === undefined) {
-
-        console.warn(`Operation Join Dp detection.`)
         factoryResetPersonalSessionData(player.name)
-
     } else {
-
         syncPlayerData(player.name,'dynamic')
-
     }
-
     setStation(player,'lobby')
     assignPlayerLabel(player)
     syncPlayerData(player.name,'session')
 
     for (let channel in chatHandler.channels) {
-        
         chatHandler.channels[channel].push(player.name)
-
     }
 
     let buildableMaps = [];
     let ownedMaps = [];
-    for (const mapId in JSON.parse(world.getDynamicProperty(`mapList`))) {
-        
-        map = JSON.parse(world.getDynamicProperty(mapId))
+    for (const mapName in JSON.parse(world.getDynamicProperty(`mapList`))) {
+        const map = JSON.parse(world.getDynamicProperty(mapName.replace(" ","_")))
         if (map.builders.includes(player.name)){
             buildableMaps.push(map.title)
             if (map.owner === player.name) ownedMaps.push(map.title)
         }
     }
-world.setDynamicProperty(`${player.name}BuildableMaps`,JSON.stringify(buildableMaps))
-world.setDynamicProperty(`${player.name}OwnedMaps`,JSON.stringify(ownedMaps))=
+    world.setDynamicProperty(`${player.name}BuildableMaps`,JSON.stringify(buildableMaps))
+    world.setDynamicProperty(`${player.name}OwnedMaps`,JSON.stringify(ownedMaps))
 
+}
+
+world.afterEvents.playerSpawn.subscribe(eventData=> { 
+    let { player, initialSpawn } = eventData;
+    if(!initialSpawn) return;
+    loadNewPlayer(player)
 })
 
 world.afterEvents.playerLeave.subscribe(eventData => {
@@ -1326,8 +1358,6 @@ world.afterEvents.itemUse.subscribe(eventData => {
     }
 });
 
-
-
 world.afterEvents.playerInteractWithEntity.subscribe(({ player, target: { typeId } }) => {
     const [TRANSPORTER_NPC_TYPE, WORKSHOP_TRANSPORTER_TYPE, DIALOGUE_TAG, SUGGEST_BAIL_DIALOGUE, TRAINING_INVITE_DIALOGUE, WORKSHOP_INVITE_DIALOGUE] 
     = ['aa_0.0.4:transporternpc', 'aa:workshoptransporter', 'transportNpc.display', 'suggestBail', 'trainingInvite', 'workshopInvite'];
@@ -1341,8 +1371,6 @@ world.afterEvents.playerInteractWithEntity.subscribe(({ player, target: { typeId
             ? openDialogue(playerName, WORKSHOP_INVITE_DIALOGUE)
             : console.warn(`Unhandled target type: ${typeId}`);
 });
-
-
 
 system.afterEvents.scriptEventReceive.subscribe(eventData => {
     console.warn(`Scriptevent feedback.\n§rSource Entity: §b${eventData.sourceEntity.name}\n§rId: §b${eventData.id}\n§rMessage: §b${eventData.message}`)
@@ -1369,12 +1397,15 @@ system.afterEvents.scriptEventReceive.subscribe(eventData => {
         case 'aa:workshop.build' :
             workshopManagementSystem.selectMap(eventData.sourceEntity,'design')
             break;
-            case 'aa:workshop.modify' :
+        case 'aa:workshop.modify' :
             workshopManagementSystem.selectMap(eventData.sourceEntity,'modify')
             break;
-            case 'aa:workshop.beginDesign' :
+        case 'aa:workshop.beginDesign' :
             workshopManagementSystem.showOwnershipForm(world.getPlayers({name:eventData.sourceEntity.name})[0])
-        
+            break;
+            case 'aa:workshop.browse' :
+                workshopManagementSystem.selectMap(eventData.sourceEntity,'browse')
+                break;
 
         
     }
@@ -1412,42 +1443,26 @@ world.afterEvents.playerPlaceBlock.subscribe(eventData => {
     }
 })
 
-
-
 // Secures data when reloading scripts
 for(const player of world.getPlayers()){
-    if (world.getDynamicProperty(player.name) === undefined) {
+   loadNewPlayer(player)
+}
 
-        factoryResetPersonalSessionData(player.name)
-        assignPlayerLabel(player)
-        syncPlayerData(player.name,'session')
-
-    } else if (sessionPlayerData[player.name] != JSON.parse(world.getDynamicProperty(player.name))) {
-
-        console.warn('Updating session player data to dynamic data.')
-        syncPlayerData(player.name,'dynamic')
-
-    }
-    setStation(player,'lobby')
-
-    for (let channel in chatHandler.channels) {
-        
-        chatHandler.channels[channel].push(player.name)
-
-    }
-};
-//world.setDynamicProperty('mapList',JSON.stringify({"Alloy Station":"Alloy_Station","map2":"map2"}))
-
-
-
+// Fills the session's workshop object with workshops from the mapList dynamic property and each map's own dynamic property
 for(const [key,value] of Object.entries(JSON.parse(world.getDynamicProperty('mapList')))) {
     workshopManagementSystem.workShops[key] = JSON.parse(world.getDynamicProperty(value));
-    
 }
 
 workshopManagementSystem.vacantWorkshops = JSON.parse(world.getDynamicProperty('vacantWorkshops'))
 
-console.warn()
+let publicMaps = [];
+for (const mapName in JSON.parse(world.getDynamicProperty(`mapList`))) {
+    const map = JSON.parse(world.getDynamicProperty(mapName.replace(" ","_")))
+    if (map.privacy === false){
+        publicMaps.push(map.title)
+    }
+}
+world.setDynamicProperty("publicMaps",JSON.stringify(publicMaps))
 
 system.runInterval(() => {
     if (stations.mapWorkshop.players.length > 0) {
@@ -1455,8 +1470,4 @@ system.runInterval(() => {
         workshopManagementSystem.enforceBounds('interval')
         
     }
-
-   
-
-    // for(const player of world.getPlayers()){}
 },40)
