@@ -155,6 +155,11 @@ let commandHandler = {
 
             }
         },
+        'removePlayerFromWorkshop' : {
+            requiredPermissionLevel : 1, code :({source: player}) => {
+                workshopManagementSystem.removePlayer(player.name)
+            }
+        },
         'runjs' : {
             requiredPermissionLevel: 1, code: () => {
                 let code = '';
@@ -376,19 +381,19 @@ let workshopManagementSystem = {
                     return;
                 }
             if (purpose === 'design' || purpose === 'modify') {
-            if (r.selection === 0) {
+                if (r.selection === 0) {
 
-                const form = new ModalFormData();
-        form.textField(`Map Name`,`${player.name}'s Map`)
-        form.dropdown(`Map Size`,[`100x 100y 100z`]);
-        form.textField(`Passcode`,``)
-        form.toggle(`Public?`);
-        form.textField('Builders (names seperated by colons)',`${player.name}:username2`)
-        form.title(`Map creation form`)
-                this.formData[player.name].form = form;
-                this.showForm(player,'newMap')
-                return
-            }
+                    const form = new ModalFormData();
+                    form.textField(`Map Name`,`${player.name}'s Map`)
+                    form.dropdown(`Map Size`,[`100x 100y 100z`]);
+                    form.textField(`Passcode`,``)
+                    form.toggle(`Public?`);
+                    form.textField('Builders (names seperated by colons)',`${player.name}:username2`)
+                    form.title(`Map creation form`)
+                            this.formData[player.name].form = form;
+                    this.showForm(player,'newMap')
+                    return
+                }
             const selectedMap = this.formData[player.name].mapSelection[r.selection - 1];
             this[`${purpose}Map`](player,selectedMap)
             this.formData[player.name] = null;
@@ -574,8 +579,6 @@ let workshopManagementSystem = {
             }
             })
     },
-
-
     
     selectMap : function (player,purpose) {
         let purposeData = [];
@@ -817,6 +820,16 @@ let workshopManagementSystem = {
     },
 
     designMap : function (player,mapName) {
+
+        // Remove all visitors
+        for (const [ playerName, activeMap ] of Object.entries(this.activeWorkshops)) {
+            if (activeMap !== mapName) return;
+            if (!JSON.parse(world.getDynamicProperty(mapName.replace(' ', '_'))).builders.includes(playerName)) {
+                this.removePlayer(playerName);
+            }
+
+        }
+
 
         setStation(player,'mapWorkshop')
         this.activeWorkshops[player.name] = mapName;
@@ -1138,6 +1151,11 @@ let workshopManagementSystem = {
         )
         
     },
+
+    removePlayer : function (playerName) {
+        this.activeWorkshops[playerName] = null;
+        system.run(() => { setStation(world.getPlayers({ name:playerName})[0],'lobby') })
+    }
 
 }
 
