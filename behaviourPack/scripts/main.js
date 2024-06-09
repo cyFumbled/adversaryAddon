@@ -380,6 +380,8 @@ let workshopManagementSystem = {
                     if (r.cancelationReason === 'UserBusy') this.showForm(player,purpose)
                     return;
                 }
+
+            this.activeWorkshops[player.name] = {};
             if (purpose === 'design' || purpose === 'modify') {
                 if (r.selection === 0) {
 
@@ -478,9 +480,9 @@ let workshopManagementSystem = {
                     }
                     uploadMapData(this.workShops[mapName.replace(' ', '_')]);
 
-                    this.activeWorkshops[player.name] = mapName;
+                    this.activeWorkshops[player.name].mapName = mapName;
 
-                    let bounds = this.workShops[this.activeWorkshops[player.name]].archivePos;
+                    let bounds = this.workShops[this.activeWorkshops[player.name].mapName].archivePos;
 
              world.getPlayers({ name:player.name})[0].teleport({
                     x: bounds.northWest.x + (bounds.southEast.x - bounds.northWest.x) / 2, 
@@ -540,7 +542,7 @@ let workshopManagementSystem = {
                             console.warn('size: '+Number(mapSize.slice(0,Number(mapSize.indexOf('x')))) + '...' + Number(nextNWPos.x) + Number(mapSize.slice(0,Number(mapSize.indexOf('x')))))
                             console.warn()
                             this.activeWorkshops[player.name] = mapName;
-                            console.warn(`NW.x: ${this.workShops[this.activeWorkshops[player.name]].archivePos.northWest.x} SE.x: ${this.workShops[this.activeWorkshops[player.name]].archivePos.southEast.x}` )
+                            console.warn(`NW.x: ${this.workShops[this.activeWorkshops[player.name].mapName].archivePos.northWest.x} SE.x: ${this.workShops[this.activeWorkshops[player.name].mapName].archivePos.southEast.x}` )
                             
                             world.setDynamicProperty('highestWorkshopKey',world.getDynamicProperty('highestWorkshopKey') + 1)
                            
@@ -554,14 +556,14 @@ let workshopManagementSystem = {
                                    world.getDimension("overworld").runCommandAsync(`setblock ${player.location.x} ${player.location.y -2} ${player.location.z} glass`)
                                     this.createSite(
                                         {
-                                            x:this.workShops[this.activeWorkshops[player.name]].archivePos.northWest.x,
-                                            y:this.workShops[this.activeWorkshops[player.name]].archivePos.northWest.y,
-                                            z:this.workShops[this.activeWorkshops[player.name]].archivePos.northWest.z
+                                            x:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.northWest.x,
+                                            y:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.northWest.y,
+                                            z:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.northWest.z
                                         },
                                         {
-                                            x:this.workShops[this.activeWorkshops[player.name]].archivePos.southEast.x,
-                                            y:this.workShops[this.activeWorkshops[player.name]].archivePos.southEast.y,
-                                            z:this.workShops[this.activeWorkshops[player.name]].archivePos.southEast.z
+                                            x:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.southEast.x,
+                                            y:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.southEast.y,
+                                            z:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.southEast.z
                                         },
                                         'aa:workshopborder',20)
                                 },10)
@@ -640,9 +642,9 @@ let workshopManagementSystem = {
     browseMap : function (player,mapName) {
 
         setStation(player,'mapWorkshop')
-        this.activeWorkshops[player.name] = mapName;
-        console.warn(JSON.stringify(this.activeWorkshops[player.name]))
-        let bounds = this.workShops[this.activeWorkshops[player.name]].archivePos;
+        this.activeWorkshops[player.name].mapName = mapName;
+        this.activeWorkshops[player.name].activity = 'browse';
+        let bounds = this.workShops[this.activeWorkshops[player.name].mapName].archivePos;
 
         world.getPlayers({ name:player.name})[0].teleport({
         x: bounds.northWest.x + (bounds.southEast.x - bounds.northWest.x) / 2, 
@@ -684,9 +686,9 @@ let workshopManagementSystem = {
             if (this.workShops[mapName]) {
                     
                     setStation(player,'mapWorkshop')
-                    this.activeWorkshops[player.name] = mapName;
+                    this.activeWorkshops[player.name].mapName = mapName;
 
-                    let bounds = this.workShops[this.activeWorkshops[player.name]].archivePos;
+                    let bounds = this.workShops[this.activeWorkshops[player.name].mapName].archivePos;
 
                     world.getPlayers({ name:player.name})[0].teleport({
                     x: bounds.northWest.x + (bounds.southEast.x - bounds.northWest.x) / 2, 
@@ -718,9 +720,9 @@ let workshopManagementSystem = {
                     }
                     uploadMapData(this.workShops[mapName.replace(' ', '_')]);
 
-                    this.activeWorkshops[player.name] = mapName;
+                    this.activeWorkshops[player.name].mapName = mapName;
 
-                    let bounds = this.workShops[this.activeWorkshops[player.name]].archivePos;
+                    let bounds = this.workShops[this.activeWorkshops[player.name].mapName].archivePos;
 
              world.getPlayers({ name:player.name})[0].teleport({
                     x: bounds.northWest.x + (bounds.southEast.x - bounds.northWest.x) / 2, 
@@ -779,8 +781,8 @@ let workshopManagementSystem = {
                             uploadMapData(this.workShops[mapName.replace(' ', '_')])
                             console.warn('size: '+Number(mapSize.slice(0,Number(mapSize.indexOf('x')))) + '...' + Number(nextNWPos.x) + Number(mapSize.slice(0,Number(mapSize.indexOf('x')))))
                             console.warn()
-                            this.activeWorkshops[player.name] = mapName;
-                            console.warn(`NW.x: ${this.workShops[this.activeWorkshops[player.name]].archivePos.northWest.x} SE.x: ${this.workShops[this.activeWorkshops[player.name]].archivePos.southEast.x}` )
+                            this.activeWorkshops[player.name].mapName = mapName;
+                            console.warn(`NW.x: ${this.workShops[this.activeWorkshops[player.name].mapName].archivePos.northWest.x} SE.x: ${this.workShops[this.activeWorkshops[player.name].mapName].archivePos.southEast.x}` )
                             
                             world.setDynamicProperty('highestWorkshopKey',world.getDynamicProperty('highestWorkshopKey') + 1)
                            
@@ -794,14 +796,14 @@ let workshopManagementSystem = {
                                    world.getDimension("overworld").runCommandAsync(`setblock ${player.location.x} ${player.location.y -2} ${player.location.z} glass`)
                                     this.createSite(
                                         {
-                                            x:this.workShops[this.activeWorkshops[player.name]].archivePos.northWest.x,
-                                            y:this.workShops[this.activeWorkshops[player.name]].archivePos.northWest.y,
-                                            z:this.workShops[this.activeWorkshops[player.name]].archivePos.northWest.z
+                                            x:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.northWest.x,
+                                            y:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.northWest.y,
+                                            z:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.northWest.z
                                         },
                                         {
-                                            x:this.workShops[this.activeWorkshops[player.name]].archivePos.southEast.x,
-                                            y:this.workShops[this.activeWorkshops[player.name]].archivePos.southEast.y,
-                                            z:this.workShops[this.activeWorkshops[player.name]].archivePos.southEast.z
+                                            x:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.southEast.x,
+                                            y:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.southEast.y,
+                                            z:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.southEast.z
                                         },
                                         'aa:workshopborder',20)
                                 },10)
@@ -822,19 +824,14 @@ let workshopManagementSystem = {
     designMap : function (player,mapName) {
 
         // Remove all visitors
-        for (const [ playerName, activeMap ] of Object.entries(this.activeWorkshops)) {
-            if (activeMap !== mapName) return;
-            if (!JSON.parse(world.getDynamicProperty(mapName.replace(' ', '_'))).builders.includes(playerName)) {
-                this.removePlayer(playerName);
-            }
-
+        for (const [ playerName, { mapName,activity } ] of Object.entries(this.activeWorkshops)) {
+            if (activeMap === mapName && activity === 'browse')  this.removePlayer(playerName);
         }
 
-
         setStation(player,'mapWorkshop')
-        this.activeWorkshops[player.name] = mapName;
-        console.warn(JSON.stringify(this.activeWorkshops[player.name]))
-        let bounds = this.workShops[this.activeWorkshops[player.name]].archivePos;
+        this.activeWorkshops[player.name].mapName = mapName;
+        this.activeWorkshops[player.name].activity = 'design';
+        let bounds = this.workShops[this.activeWorkshops[player.name].mapName].archivePos;
 
         world.getPlayers({ name:player.name})[0].teleport({
         x: bounds.northWest.x + (bounds.southEast.x - bounds.northWest.x) / 2, 
@@ -847,7 +844,7 @@ let workshopManagementSystem = {
 
     boundsCheck : function (pos,name) {
 
-        let bounds = this.workShops[this.activeWorkshops[name]].archivePos;
+        let bounds = this.workShops[this.activeWorkshops[name].mapName].archivePos;
 
         if (pos.x < bounds.northWest.x || pos.x > bounds.southEast.x || pos.y < bounds.northWest.y || pos.y > bounds.southEast.y || pos.z < bounds.northWest.z || pos.z > bounds.southEast.z) {
             //console.warn('\nbounds.northWest.x: ' + bounds.northWest.x +'\nbounds.northWest.y: ' + bounds.northWest.y + '\nbounds.northWest.z: ' + bounds.northWest.z +
@@ -867,8 +864,9 @@ let workshopManagementSystem = {
         
         for (const playerName in this.activeWorkshops) {
             let pos = world.getPlayers({ name:playerName})[0].location;
-            let bounds = this.workShops[this.activeWorkshops[playerName]].archivePos;
-            
+            if (this.workShops[this.activeWorkshops[playerName].mapName].archivePos !== null) return
+            let bounds = this.workShops[this.activeWorkshops[playerName].mapName].archivePos
+
             if (pos.x < (bounds.northWest.x - 10) || pos.x > (bounds.southEast.x + 10) || pos.y < (bounds.northWest.y - 10) || pos.y > (bounds.southEast.y + 10) || pos.z < (bounds.northWest.z - 10) || pos.z > (bounds.southEast.z + 10)) {
                 system.run( () => {world.getPlayers({ name:playerName})[0].teleport({
                     x: bounds.northWest.x + (bounds.southEast.x - bounds.northWest.x) / 2, 
@@ -1433,7 +1431,7 @@ system.afterEvents.scriptEventReceive.subscribe(eventData => {
 
 world.beforeEvents.playerBreakBlock.subscribe(eventData => {
 
-    if (sessionPlayerData[eventData.player.name].station == 'mapWorkshop' && workshopManagementSystem.boundsCheck(eventData.block.location,eventData.player.name) == true) {
+    if (sessionPlayerData[eventData.player.name].station == 'mapWorkshop' && ( workshopManagementSystem.boundsCheck(eventData.block.location,eventData.player.name) == true || workshopManagementSystem.activeWorkshops[eventData.player.name].activity === 'browse')) {
         eventData.cancel = true;
         return;
     }
@@ -1454,7 +1452,7 @@ world.beforeEvents.playerBreakBlock.subscribe(eventData => {
 
 world.afterEvents.playerPlaceBlock.subscribe(eventData => {
     console.warn('testing block at '+ eventData.block.location.x + ' ' + + eventData.block.location.y + ' ' + + eventData.block.location.z + '..')
-    if (sessionPlayerData[eventData.player.name].station == 'mapWorkshop' && workshopManagementSystem.boundsCheck(eventData.block.location,eventData.player.name) == true) {
+    if (sessionPlayerData[eventData.player.name].station == 'mapWorkshop' && ( workshopManagementSystem.boundsCheck(eventData.block.location,eventData.player.name) == true || workshopManagementSystem.activeWorkshops[eventData.player.name].activity === 'browse')) {
         world.getDimension('overworld').fillBlocks(eventData.block.location, eventData.block.location, "minecraft:air")
         console.warn('filled')
         return;
