@@ -1,7 +1,7 @@
 'use strict';
 
 import { ItemStack, system , world } from "@minecraft/server";
-import { ModalFormData, ActionFormData } from "@minecraft/server-ui";
+import { ModalFormData, ActionFormData, MessageFormData, MessageFormResponse } from "@minecraft/server-ui";
 
 let commandHandler = {
     commandReference : {
@@ -469,17 +469,28 @@ let workshopManagementSystem = {
                     delete mapList[sourceMapName];
                     world.setDynamicProperty('mapList',JSON.stringify(mapList));
                 }
-                if (this.workShops[mapName].privacyToggle === false && mapName === sourceMapName) {
-                    let publicMaps = JSON.parse(world.getDynamicProperty("publicMaps"))
+                let publicMaps = JSON.parse(world.getDynamicProperty("publicMaps"))
+                if (this.workShops[mapName].privateMap === true && mapName === sourceMapName && publicMaps.includes(mapName)) {
                     publicMaps.splice(publicMaps.indexOf(sourceMapName),1)
-                    world.setDynamicProperty(`publicMaps`,JSON.stringify(publicMaps))
                 }
+                else if (this.workShops[mapName].privateMap === false && mapName === sourceMapName && !publicMaps.includes(mapName)) {
+                    publicMaps.push(mapName)
+                }
+                world.setDynamicProperty(`publicMaps`,JSON.stringify(publicMaps))
 
             }
             else if (purpose === 'browse') {
                 const selectedMap = this.formData[player.name].mapSelection[r.selection];
-                this[`${purpose}Map`](player,selectedMap)
-                this.formData[player.name] = null; 
+
+                const form = new MessageFormData()
+                    .title(selectedMap)
+                    .textField(world.getDynamicProperty(selectedMap))
+                    .button1('Visit')
+                    .button2('Cancel')
+        
+
+                this.formData[player.name] = form
+                this.showForm(player,'confirmBrowse',selectedMap)
             }
             else if (purpose === 'newMap') {
 
@@ -631,6 +642,12 @@ let workshopManagementSystem = {
             setStation(player,'mapWorkshop')
             syncPlayerData(player.name,'session')
             }
+            else if (purpose === 'confirmBrowse') {
+
+                console.warn(r.selection)
+                console.warn(r.canceled)
+                this.designMap(player,sourceMapName)
+            }
             })
     },
     
@@ -648,14 +665,13 @@ let workshopManagementSystem = {
                 break;
 
         }
-
         const [ formTitle, formBody, sourceList ] = purposeData
         purposeData = null
          
         const form = new ActionFormData()
             .title(formTitle)
             .body(formBody)
-        
+    
         this.formData[player.name] =  {};
 
         if (sourceList === 'publicMaps') {
@@ -664,6 +680,7 @@ let workshopManagementSystem = {
                 return;
             }
          this.formData[player.name].mapSelection = JSON.parse(world.getDynamicProperty(sourceList))
+         console.warn(world.getDynamicProperty(sourceList))
         }
         else { 
             form.button("§r---- §lNew Map §r----");
