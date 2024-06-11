@@ -26,7 +26,7 @@ let commandHandler = {
                 console.warn('test33')
                 workshopManagementSystem.vacantWorkshops.push({
                     key: world.getDynamicProperty('highestWorkshopKey'),
-                    privacy : 'private',
+                    privateMap : true,
                     archivePos : {
                         northWest : nextNWPos,
                         southEast : southeastPos
@@ -83,7 +83,7 @@ let commandHandler = {
             }},
         'logMap': {
             requiredPermissionLevel: 1, code: ({parameters}) => {
-                if (parameters[0] === 'all' || !parameters[0]) console.warn(world.getDynamicProperty('mapList'));
+                if (parameters[0] === 'list' || !parameters[0]) console.warn(world.getDynamicProperty('mapList'));
                 else console.warn(world.getDynamicProperty(parameters[0]));
             }
         },
@@ -161,10 +161,10 @@ let commandHandler = {
             }
         },
         'runjs' : {
-            requiredPermissionLevel: 1, code: () => {
+            requiredPermissionLevel: 1, code: ({parameters}) => {
                 let code = '';
-                    for (let param in cmdParameters) {
-                        code = code + ' ' + cmdParameters[param]
+                    for (let param in parameters) {
+                        code = code + ' ' + parameters[param]
                     }
                     eval(code);
             }},
@@ -203,7 +203,7 @@ let commandHandler = {
     }
 }
 
-
+console.warn(world.getDynamicProperty("TornAlloy808450BuildableMaps"))
 let chatHandler = {
 
     channels : {'global':[],'lobby':[],'botAnnouncements':[]},
@@ -365,9 +365,6 @@ let taskManagement = {
 
 }
 
-// Temporary data correction
-
-
 let workshopManagementSystem = {
     activeWorkshops : {},
     vacantWorkshops : [],
@@ -401,38 +398,81 @@ let workshopManagementSystem = {
             this.formData[player.name] = null;
             }
             else if (purpose === 'metadata') {
-
+                console.warn(JSON.stringify(this.workShops))
                 let [mapName, mapSize, passcode, privacyToggle,builders] = r.formValues
                 mapSize = [`100x 100y 100z`,`200x 200y 200z`][mapSize]
                 
                 mapName = mapName || sourceMapName;
-                builders = builders ? builders.split(':') : [player.name];
+                builders = builders ? builders.split(':') : this.workShops[sourceMapName].builders;
 
-                
+                if (JSON.stringify(builders) !== JSON.stringify(this.workShops[sourceMapName].builders) && mapName === sourceMapName) {
+                    console.warn('test')
+                    console.warn("Builder array has been editied. " + this.workShops[mapName].builders + "*" + builders)
+                    let removedBuilders = this.workShops[mapName].builders; //builders.filter((element) => {!this.workShops[mapName].builders.includes(element)})
+                    console.warn(removedBuilders)
+                    for (const element of removedBuilders) {
+                        let buildableMaps = JSON.parse(world.getDynamicProperty(`${element}BuildableMaps`))
+                        buildableMaps.splice(buildableMaps.indexOf(mapName),1)
+                        console.warn("New Buildable array: " + buildableMaps)
+                        world.setDynamicProperty(`${element}BuildableMaps`,JSON.stringify(buildableMaps))
+                    }
+                    for (const element of builders) {
+                        let buildableMaps = JSON.parse(world.getDynamicProperty(`${element}BuildableMaps`))
+                            buildableMaps.push(mapName);
+                            console.warn("Fresh buildable array: " + buildableMaps)
+                            world.setDynamicProperty(`${element}BuildableMaps`,JSON.stringify(buildableMaps));
+                    }
+                }
 
-                this.workShops[mapName.replace(' ', '_')] = {
+                this.workShops[mapName] = {
                     id: mapName.replace(' ', '_'),
                     title: mapName,
-                    key : this.workShops[sourceMapName.replace(' ', '_')].key,
+                    key : this.workShops[sourceMapName].key,
                     owner: player.name,
-                    builders: [builders],
-                    privacy: !privacyToggle,
+                    builders: builders,
+                    privateMap: !privacyToggle,
                     passcode: passcode,
                     developmentaState : 'unreleased',
                     mapVersion : '0.1',
-                    creationVersion : this.workShops[sourceMapName.replace(' ', '_')].creationVersion,
+                    creationVersion : this.workShops[sourceMapName].creationVersion,
                     compatableGamemodes : ['training'],
-                    archivePos : this.workShops[sourceMapName.replace(' ', '_')].archivePos
+                    archivePos : this.workShops[sourceMapName].archivePos
                 }
-                uploadMapData(this.workShops[mapName.replace(' ', '_')]);
+                uploadMapData(this.workShops[mapName]);
 
+
+                
+                
                 if (mapName !== sourceMapName) {
+                    
+                    console.warn(`Removing ${sourceMapName} from ${player.name}'s owned maps..`)
+                    let ownedMaps = JSON.parse(world.getDynamicProperty(`${player.name}OwnedMaps`))
+                    ownedMaps.splice(ownedMaps.indexOf(sourceMapName),1)
+                    ownedMaps.push(mapName)
+                    world.setDynamicProperty(`${player.name}OwnedMaps`,JSON.stringify(ownedMaps))
+
+                    for (const element of this.workShops[sourceMapName].builders) {
+                        console.warn(`Removing ${sourceMapName} from ${element}'s buildable maps..`)
+                        let buildableMaps = JSON.parse(world.getDynamicProperty(`${element}BuildableMaps`))
+                        buildableMaps.splice(ownedMaps.indexOf(sourceMapName),1)
+                        world.setDynamicProperty(`${element}BuildableMaps`,JSON.stringify(buildableMaps))
+                    }
+
+                    let publicMaps = JSON.parse(world.getDynamicProperty("publicMaps"));
+                    if (this.workShops[sourceMapName].privacyToggle === false) publicMaps.splice(publicMaps.indexOf(sourceMapName),1);
+                    if (this.workShops[mapName].privacyToggle === false) publicMaps.push(mapName);
+                    world.setDynamicProperty(`publicMaps`,JSON.stringify(publicMaps));
 
                     this.workShops[sourceMapName] = null;
-                    world.setDynamicProperty(sourceMapName.replace(' ', '_'),undefined)
-                    let mapList = JSON.parse(world.getDynamicProperty('mapList'))
-                    delete mapList[sourceMapName]
-                    world.setDynamicProperty('mapList',JSON.stringify(mapList))
+                    world.setDynamicProperty(sourceMapName,undefined);
+                    let mapList = JSON.parse(world.getDynamicProperty('mapList'));
+                    delete mapList[sourceMapName];
+                    world.setDynamicProperty('mapList',JSON.stringify(mapList));
+                }
+                if (this.workShops[mapName].privacyToggle === false && mapName === sourceMapName) {
+                    let publicMaps = JSON.parse(world.getDynamicProperty("publicMaps"))
+                    publicMaps.splice(publicMaps.indexOf(sourceMapName),1)
+                    world.setDynamicProperty(`publicMaps`,JSON.stringify(publicMaps))
                 }
 
             }
@@ -443,7 +483,7 @@ let workshopManagementSystem = {
             }
             else if (purpose === 'newMap') {
 
-               this.vacantWorkshops = JSON.parse(world.getDynamicProperty('vacantWorkshops'))
+            this.vacantWorkshops = JSON.parse(world.getDynamicProperty('vacantWorkshops'))
             let [mapName, mapSize, passcode, privacyToggle,builders] = r.formValues
             mapSize = [`100x 100y 100z`,`200x 200y 200z`][mapSize]
                 
@@ -452,8 +492,9 @@ let workshopManagementSystem = {
 
 
             if (this.workShops[mapName]) {
-                    
-                console.warn('prexsisting map name')
+                world.getDimension("overworld").runCommandAsync(`/execute at ${player.name} run playsound step.chain ${player.name}`)
+                console.warn('Aborted map creation: prexsisting map name')
+                workshopManagementSystem.showForm(player,'newMap')
                 return;
                 }
 
@@ -464,13 +505,13 @@ let workshopManagementSystem = {
 
                     world.setDynamicProperty('vacantWorkshops',JSON.stringify(this.vacantWorkshops))
 
-                    this.workShops[mapName.replace(' ', '_')] = {
+                    this.workShops[mapName] = {
                         id: mapName.replace(' ', '_'),
                         title: mapName,
                         key : targetKey,
                         owner: player.name,
                         builders: [player.name],
-                        privacy: !privacyToggle,
+                        privateMap: !privacyToggle,
                         passcode: passcode,
                         developmentaState : 'unreleased',
                         mapVersion : '0.1',
@@ -478,7 +519,7 @@ let workshopManagementSystem = {
                         compatableGamemodes : ['training'],
                         archivePos : targetWorkshop.archivePos
                     }
-                    uploadMapData(this.workShops[mapName.replace(' ', '_')]);
+                    uploadMapData(this.workShops[mapName]);
 
                     this.activeWorkshops[player.name].mapName = mapName;
 
@@ -513,13 +554,13 @@ let workshopManagementSystem = {
                         //world.getDimension("overworld").runCommandAsync('setblock 1000 1 1000 air')
                        // this.createSite({x:1000,y:0,z:1000},{x:1000,y:10,z:1000},'stone',20)=
 
-                        this.workShops[mapName.replace(' ', '_')] = {
+                        this.workShops[mapName] = {
                             id: mapName.replace(' ', '_'),
                             title: mapName,
                             key : world.getDynamicProperty('highestWorkshopKey') + 1,
                             owner: player.name,
                             builders: [player.name],
-                                privacy: !privacyToggle,
+                                privateMap: !privacyToggle,
                                 passcode: passcode,
                                 developmentaState : 'unreleased',
                                 mapVersion : '0.1',
@@ -538,10 +579,9 @@ let workshopManagementSystem = {
                                     }
                                 }
                             }
-                            uploadMapData(this.workShops[mapName.replace(' ', '_')])
+                            uploadMapData(this.workShops[mapName])
                             console.warn('size: '+Number(mapSize.slice(0,Number(mapSize.indexOf('x')))) + '...' + Number(nextNWPos.x) + Number(mapSize.slice(0,Number(mapSize.indexOf('x')))))
-                            console.warn()
-                            this.activeWorkshops[player.name] = mapName;
+                            this.activeWorkshops[player.name].mapName = mapName;
                             console.warn(`NW.x: ${this.workShops[this.activeWorkshops[player.name].mapName].archivePos.northWest.x} SE.x: ${this.workShops[this.activeWorkshops[player.name].mapName].archivePos.southEast.x}` )
                             
                             world.setDynamicProperty('highestWorkshopKey',world.getDynamicProperty('highestWorkshopKey') + 1)
@@ -570,14 +610,26 @@ let workshopManagementSystem = {
 
 
             }
+
+            let ownedMaps = JSON.parse(world.getDynamicProperty(`${player.name}OwnedMaps`))
+            ownedMaps.push(mapName)
+            world.setDynamicProperty(`${player.name}OwnedMaps`,JSON.stringify(ownedMaps))
+
+            for (const element of builders) {
+                let buildableMaps = JSON.parse(world.getDynamicProperty(`${element}BuildableMaps`))
+                    buildableMaps.push(mapName);
+                    console.warn("Fresh buildable array: " + buildableMaps)
+                    world.setDynamicProperty(`${element}BuildableMaps`,JSON.stringify(buildableMaps));
+            }
+
+            if (privacyToggle === false) {
+                let publicMaps = JSON.parse(world.getDynamicProperty("publicMaps"));
+                publicMaps.push(mapName);
+                world.setDynamicProperty(`publicMaps`,JSON.stringify(publicMaps));
+            }
+            
             setStation(player,'mapWorkshop')
             syncPlayerData(player.name,'session')
-                    
-                
-
-        
-                   
-
             }
             })
     },
@@ -589,7 +641,7 @@ let workshopManagementSystem = {
                 purposeData = ["Build Form","Select which map you wish to build on.", "BuildableMaps"]; 
                 break;
             case 'modify': 
-                 purposeData = ["Modify Form","Select which map you wish to build on.", "BuildableMaps"]; 
+                 purposeData = ["Modify Form","Select which map's metadata you wish to modify.", "OwnedMaps"]; 
                 break;
             case 'browse': 
                 purposeData = ["Browse Form","Select which map you wish to visit.", "publicMaps"]; 
@@ -607,15 +659,18 @@ let workshopManagementSystem = {
         this.formData[player.name] =  {};
 
         if (sourceList === 'publicMaps') {
+            if (JSON.parse(world.getDynamicProperty(sourceList)).length === 0) {
+                player.sendMessage("[Script][Alerts]- §8Cannot construct the browse menu as all maps are prviate.")
+                return;
+            }
          this.formData[player.name].mapSelection = JSON.parse(world.getDynamicProperty(sourceList))
         }
-
         else { 
             form.button("§r---- §lNew Map §r----");
             this.formData[player.name].mapSelection = JSON.parse(world.getDynamicProperty(player.name + sourceList))
         }
 
-        for (var i = 0; i < this.formData[player.name].mapSelection.length; i++) {
+        for (let i = 0; i < this.formData[player.name].mapSelection.length; i++) {
             form.button(this.formData[player.name].mapSelection[i])
         }
 
@@ -704,13 +759,13 @@ let workshopManagementSystem = {
 
                     world.setDynamicProperty('vacantWorkshops',JSON.stringify(this.vacantWorkshops))
 
-                    this.workShops[mapName.replace(' ', '_')] = {
+                    this.workShops[mapName] = {
                         id: mapName.replace(' ', '_'),
                         title: mapName,
                         key : targetKey,
                         owner: player.name,
                         builders: [player.name],
-                        privacy: !privacyToggle,
+                        privateMap: !privacyToggle,
                         passcode: passcode,
                         developmentaState : 'unreleased',
                         mapVersion : '0.1',
@@ -718,7 +773,7 @@ let workshopManagementSystem = {
                         compatableGamemodes : ['training'],
                         archivePos : targetWorkshop.archivePos
                     }
-                    uploadMapData(this.workShops[mapName.replace(' ', '_')]);
+                    uploadMapData(this.workShops[mapName]);
 
                     this.activeWorkshops[player.name].mapName = mapName;
 
@@ -753,13 +808,13 @@ let workshopManagementSystem = {
                         //world.getDimension("overworld").runCommandAsync('setblock 1000 1 1000 air')
                        // this.createSite({x:1000,y:0,z:1000},{x:1000,y:10,z:1000},'stone',20)=
 
-                        this.workShops[mapName.replace(' ', '_')] = {
+                        this.workShops[mapName] = {
                             id: mapName.replace(' ', '_'),
                             title: mapName,
                             key : world.getDynamicProperty('highestWorkshopKey') + 1,
                             owner: player.name,
                             builders: [player.name],
-                                privacy: !privacyToggle,
+                                privateMap: !privacyToggle,
                                 passcode: passcode,
                                 developmentaState : 'unreleased',
                                 mapVersion : '0.1',
@@ -778,7 +833,7 @@ let workshopManagementSystem = {
                                     }
                                 }
                             }
-                            uploadMapData(this.workShops[mapName.replace(' ', '_')])
+                            uploadMapData(this.workShops[mapName])
                             console.warn('size: '+Number(mapSize.slice(0,Number(mapSize.indexOf('x')))) + '...' + Number(nextNWPos.x) + Number(mapSize.slice(0,Number(mapSize.indexOf('x')))))
                             console.warn()
                             this.activeWorkshops[player.name].mapName = mapName;
@@ -825,7 +880,7 @@ let workshopManagementSystem = {
 
         // Remove all visitors
         for (const [ playerName, { mapName,activity } ] of Object.entries(this.activeWorkshops)) {
-            if (activeMap === mapName && activity === 'browse')  this.removePlayer(playerName);
+            if (this.activeWorkshops[player.name].activeMap === mapName && activity === 'browse')  this.removePlayer(playerName);
         }
 
         setStation(player,'mapWorkshop')
@@ -860,11 +915,10 @@ let workshopManagementSystem = {
 
     },
 
-    enforceBounds : function (reason) {
-        
+    enforceBounds : function (reason) { 
         for (const playerName in this.activeWorkshops) {
             let pos = world.getPlayers({ name:playerName})[0].location;
-            if (this.workShops[this.activeWorkshops[playerName].mapName].archivePos !== null) return
+            if (this.workShops[this.activeWorkshops[playerName].mapName].archivePos === null) return
             let bounds = this.workShops[this.activeWorkshops[playerName].mapName].archivePos
 
             if (pos.x < (bounds.northWest.x - 10) || pos.x > (bounds.southEast.x + 10) || pos.y < (bounds.northWest.y - 10) || pos.y > (bounds.southEast.y + 10) || pos.z < (bounds.northWest.z - 10) || pos.z > (bounds.southEast.z + 10)) {
@@ -1474,15 +1528,15 @@ workshopManagementSystem.vacantWorkshops = JSON.parse(world.getDynamicProperty('
 let publicMaps = [];
 for (const mapName in JSON.parse(world.getDynamicProperty(`mapList`))) {
     const map = JSON.parse(world.getDynamicProperty(mapName.replace(" ","_")))
-    if (map.privacy === false){
+    if (map.privateMap === false){
         publicMaps.push(map.title)
     }
 }
 world.setDynamicProperty("publicMaps",JSON.stringify(publicMaps))
 
 system.runInterval(() => {
-    if (stations.mapWorkshop.players.length > 0) {
 
+    if (stations.mapWorkshop.players.length > 0) {
         workshopManagementSystem.enforceBounds('interval')
         
     }
