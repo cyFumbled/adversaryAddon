@@ -95,9 +95,9 @@ let commandHandler = {
                     key: 1,
                     owner: 'TornAlloy808450',
                     builders : ['TornAlloy808450'],
-                    rivacy : 'public',
+                    privateMap : 'public',
                     passcode : '60',
-                    developmentaState : 'unreleased',
+                    developmentalState : 'unreleased',
                     mapVersion : '0.1',
                     creationVersion : '0.0.5',
                     compatableGamemodes : ['training'],
@@ -399,8 +399,7 @@ let workshopManagementSystem = {
             }
             else if (purpose === 'metadata') {
                 console.warn(JSON.stringify(this.workShops))
-                let [mapName, mapSize, passcode, privacyToggle,builders] = r.formValues
-                mapSize = [`100x 100y 100z`,`200x 200y 200z`][mapSize]
+                let [mapName, passcode, privacyToggle,builders] = r.formValues
                 
                 mapName = mapName || sourceMapName;
                 builders = builders ? builders.split(':') : this.workShops[sourceMapName].builders;
@@ -432,7 +431,7 @@ let workshopManagementSystem = {
                     builders: builders,
                     privateMap: !privacyToggle,
                     passcode: passcode,
-                    developmentaState : 'unreleased',
+                    developmentalState : 'unreleased',
                     mapVersion : '0.1',
                     creationVersion : this.workShops[sourceMapName].creationVersion,
                     compatableGamemodes : ['training'],
@@ -481,15 +480,13 @@ let workshopManagementSystem = {
             }
             else if (purpose === 'browse') {
                 const selectedMap = this.formData[player.name].mapSelection[r.selection];
-
+                const mapData = JSON.parse(world.getDynamicProperty(selectedMap.replace(' ', '_')));
                 const form = new MessageFormData()
                     .title(selectedMap)
-                    .textField(world.getDynamicProperty(selectedMap))
-                    .button1('Visit')
-                    .button2('Cancel')
-        
-
-                this.formData[player.name] = form
+                    .body(`Id: ${mapData.id}\nKey: ${mapData.key}\nOwner: ${mapData.owner}\nBuilders: ${mapData.builders}\nDevelopmental State: ${mapData.developmentalState}\nMap Version: ${mapData.mapVersion}\nCreation version: ${mapData.creationVersion}\nCompatable gamemodes: ${mapData.compatableGamemodes}`)
+                    .button2('Visit')
+                    .button1('Cancel')
+                this.formData[player.name].form = form
                 this.showForm(player,'confirmBrowse',selectedMap)
             }
             else if (purpose === 'newMap') {
@@ -524,7 +521,7 @@ let workshopManagementSystem = {
                         builders: [player.name],
                         privateMap: !privacyToggle,
                         passcode: passcode,
-                        developmentaState : 'unreleased',
+                        developmentalState : 'unreleased',
                         mapVersion : '0.1',
                         creationVersion : '0.0.6',
                         compatableGamemodes : ['training'],
@@ -573,7 +570,7 @@ let workshopManagementSystem = {
                             builders: [player.name],
                                 privateMap: !privacyToggle,
                                 passcode: passcode,
-                                developmentaState : 'unreleased',
+                                developmentalState : 'unreleased',
                                 mapVersion : '0.1',
                                 creationVersion : '0.0.6',
                                 compatableGamemodes : ['training'],
@@ -643,10 +640,8 @@ let workshopManagementSystem = {
             syncPlayerData(player.name,'session')
             }
             else if (purpose === 'confirmBrowse') {
-
-                console.warn(r.selection)
-                console.warn(r.canceled)
-                this.designMap(player,sourceMapName)
+                if (r.selection === 1) this.browseMap(player,sourceMapName);
+                else if (r.selection === 0) workshopManagementSystem.selectMap(player,'browse')
             }
             })
     },
@@ -680,7 +675,6 @@ let workshopManagementSystem = {
                 return;
             }
          this.formData[player.name].mapSelection = JSON.parse(world.getDynamicProperty(sourceList))
-         console.warn(world.getDynamicProperty(sourceList))
         }
         else { 
             form.button("§r---- §lNew Map §r----");
@@ -696,17 +690,16 @@ let workshopManagementSystem = {
 
     },
 
-    modifyMap : function (player,map) {
-        const form = new ModalFormData();
-        form.textField(`Map Name`,`${player.name}'s Map`)
-        form.dropdown(`Map Size`,[`100x 100y 100z`]);
-        form.textField(`Passcode`,``)
-        form.toggle(`Public?`);
-        form.textField('Builders (names seperated by colons)',`${player.name}:username2`)
-        form.title(`Ownership Form`)
+    modifyMap : function (player,mapName) {
+        const form = new ModalFormData()
+            .textField(`Map Name`, this.workShops[mapName].title ? this.workShops[mapName].title : `${player.name}'s Map`)
+            .textField(`Passcode`, this.workShops[mapName].passcode ? this.workShops[mapName].passcode : 'CURRENTLY NO PASSCODE')
+            .toggle(`Public?`, this.workShops[mapName].privateMap ? !this.workShops[mapName].privateMap : false)
+            .textField('Builders (names seperated by colons)', this.workShops[mapName].builders ? JSON.stringify(this.workShops[mapName].builders).replaceAll(",",":").replace("[","").replace("]","").replaceAll('"',"") : `${player.name}:username2`)
+            .title(`Metadata Form - ${this.workShops[mapName].id}`)
 
         this.formData[player.name].form = form;
-        this.showForm(player,'metadata',map)
+        this.showForm(player,'metadata',mapName)
 
     },
 
@@ -784,7 +777,7 @@ let workshopManagementSystem = {
                         builders: [player.name],
                         privateMap: !privacyToggle,
                         passcode: passcode,
-                        developmentaState : 'unreleased',
+                        developmentalState : 'unreleased',
                         mapVersion : '0.1',
                         creationVersion : '0.0.6',
                         compatableGamemodes : ['training'],
@@ -833,7 +826,7 @@ let workshopManagementSystem = {
                             builders: [player.name],
                                 privateMap: !privacyToggle,
                                 passcode: passcode,
-                                developmentaState : 'unreleased',
+                                developmentalState : 'unreleased',
                                 mapVersion : '0.1',
                                 creationVersion : '0.0.6',
                                 compatableGamemodes : ['training'],
@@ -1490,9 +1483,9 @@ system.afterEvents.scriptEventReceive.subscribe(eventData => {
         case 'aa:workshop.beginDesign' :
             workshopManagementSystem.showOwnershipForm(world.getPlayers({name:eventData.sourceEntity.name})[0])
             break;
-            case 'aa:workshop.browse' :
-                workshopManagementSystem.selectMap(eventData.sourceEntity,'browse')
-                break;
+        case 'aa:workshop.browse' :
+            workshopManagementSystem.selectMap(eventData.sourceEntity,'browse')
+            break;
 
         
     }
