@@ -203,7 +203,6 @@ let commandHandler = {
     }
 }
 
-console.warn(world.getDynamicProperty("TornAlloy808450BuildableMaps"))
 let chatHandler = {
 
     channels : {'global':[],'lobby':[],'botAnnouncements':[]},
@@ -593,9 +592,6 @@ let workshopManagementSystem = {
                             console.warn(`NW.x: ${this.workShops[this.activeWorkshops[player.name].mapName].archivePos.northWest.x} SE.x: ${this.workShops[this.activeWorkshops[player.name].mapName].archivePos.southEast.x}` )
                             
                             world.setDynamicProperty('highestWorkshopKey',world.getDynamicProperty('highestWorkshopKey') + 1)
-                           
-
-                        
                             
                          },5)
                            
@@ -930,7 +926,8 @@ let workshopManagementSystem = {
             let pos = world.getPlayers({ name:playerName})[0].location;
             if (this.workShops[this.activeWorkshops[playerName].mapName].archivePos === null) return
             let bounds = this.workShops[this.activeWorkshops[playerName].mapName].archivePos
-
+            world.getDimension("overworld").runCommandAsync(`kill @e[x=${pos.x},y=${pos.y},z=${pos.z},family=mob,type=!player,r=200,type=!aa_0.0.4:transporternpc,type=!aa_0.0.4:transportnpc.display,type=!aa:workshoptransporter]`)
+            world.getDimension("overworld").runCommandAsync(`kill @e[x=${pos.x},y=${pos.y},z=${pos.z},type=tnt,r=200]`)
             if (pos.x < (bounds.northWest.x - 10) || pos.x > (bounds.southEast.x + 10) || pos.y < (bounds.northWest.y - 10) || pos.y > (bounds.southEast.y + 10) || pos.z < (bounds.northWest.z - 10) || pos.z > (bounds.southEast.z + 10)) {
                 system.run( () => {world.getPlayers({ name:playerName})[0].teleport({
                     x: bounds.northWest.x + (bounds.southEast.x - bounds.northWest.x) / 2, 
