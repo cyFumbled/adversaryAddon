@@ -292,26 +292,21 @@ let taskManagement = {
     EQueue : [],
 
     clearTasks : function() {
-
         this.totalQueueing = 0;
         this.aQueue = [];
         this.bQueue = [];
         this.cQueue = [];
         this.dQueue = [];
         this.eQueue = [];
-
         console.warn("Cleared All Tasks.")
     },
 
     newTask : function(priority,data) {
-
         this.lifetimeTaskCount++;
         this.totalQueueing++;
-       // console.warn('Testing ' + this[`${priority}Queue`])
         this[`${priority}Queue`].push(JSON.stringify(data));
         if (this.targetPriority > priority)  this.targetPriority = priority;
         if (this.totalQueueing == 1) this.completeTasks() 
-
     },
 
     completeTasks : function () {
@@ -325,23 +320,22 @@ let taskManagement = {
         let taskData = JSON.parse(JSON.parse(this[`${currentPriority}Queue`][0]))
 
         switch (taskData.taskId) {
-
             case 'fill': 
 
                 console.warn(`Filling ${taskData.northWestPos.x}, ${taskData.northWestPos.y}, ${taskData.northWestPos.z} - ${taskData.southEastPos.x}, ${taskData.southEastPos.y}, ${taskData.southEastPos.z} with ${taskData.blockId}..`)
                 world.getDimension('overworld').fillBlocks(taskData.northWestPos,taskData.southEastPos,taskData.blockId)
 
-            break;
+                break;
+            
             case 'removeTickingarea':
                 world.getDimension("overworld").runCommandAsync(`tickingarea remove ${taskData.pos.x} ${taskData.pos.y} ${taskData.pos.z}`)
                 console.warn('Ticking area removed.')
+            
                 break;
+            
             default : 
-
                 console.warn(`Unrecognised taskId: ${taskData.taskId}`)
-
-            break;
-
+                break;
             }
         
         
@@ -716,172 +710,6 @@ let workshopManagementSystem = {
 
     },
 
-    showOwnershipForm : function (player) {
-
-
-
-        const form = new ModalFormData();
-        form.textField(`Map Name`,`${player.name}'s Map`)
-        form.dropdown(`Map Size`,[`100x 100y 100z`]);
-        form.textField(`Passcode`,``)
-        form.toggle(`Public?`);
-        form.textField('Builders (names seperated by colons)',`${player.name}:username2`)
-        form.title(`Ownership Form`)
-
-        form.show(player).then(r => {
-            if (r.canceled) {
-                if (r.cancelationReason === 'UserBusy') {
-                    this.showOwnershipForm(player);
-                }
-                return;
-            }
-
-            this.vacantWorkshops = JSON.parse(world.getDynamicProperty('vacantWorkshops'))
-            let [mapName, mapSize, passcode, privacyToggle,builders] = r.formValues
-            mapSize = [`100x 100y 100z`,`200x 200y 200z`][mapSize]
-                
-            mapName = mapName || `${player.name}'s map`;
-            builders = builders ? builders.split(':') : [player.name];
-
-
-            if (this.workShops[mapName]) {
-                    
-                    setStation(player,'mapWorkshop')
-                    this.activeWorkshops[player.name].mapName = mapName;
-
-                    let bounds = this.workShops[this.activeWorkshops[player.name].mapName].archivePos;
-
-                    world.getPlayers({ name:player.name})[0].teleport({
-                    x: bounds.northWest.x + (bounds.southEast.x - bounds.northWest.x) / 2, 
-                    y: bounds.northWest.y + (bounds.southEast.y - bounds.northWest.y) / 2,
-                    z: bounds.northWest.z + (bounds.southEast.z - bounds.northWest.z) / 2
-                }) 
-                }
-
-                else if (this.vacantWorkshops.length > 0) {
-                    
-                    const targetKey = this.vacantWorkshops[0].key
-                    const targetWorkshop = this.vacantWorkshops.shift()
-
-                    world.setDynamicProperty('vacantWorkshops',JSON.stringify(this.vacantWorkshops))
-
-                    this.workShops[mapName] = {
-                        id: mapName.replace(' ', '_'),
-                        title: mapName,
-                        key : targetKey,
-                        owner: player.name,
-                        builders: [player.name],
-                        privateMap: !privacyToggle,
-                        passcode: passcode,
-                        developmentalState : 'unreleased',
-                        mapVersion : '0.1',
-                        creationVersion : '0.0.6',
-                        compatableGamemodes : ['training'],
-                        archivePos : targetWorkshop.archivePos
-                    }
-                    uploadMapData(this.workShops[mapName]);
-
-                    this.activeWorkshops[player.name].mapName = mapName;
-
-                    let bounds = this.workShops[this.activeWorkshops[player.name].mapName].archivePos;
-
-             world.getPlayers({ name:player.name})[0].teleport({
-                    x: bounds.northWest.x + (bounds.southEast.x - bounds.northWest.x) / 2, 
-                    y: bounds.northWest.y + (bounds.southEast.y - bounds.northWest.y) / 2,
-                    z: bounds.northWest.z + (bounds.southEast.z - bounds.northWest.z) / 2
-                }) 
-
-                }
-                else if (this.vacantWorkshops.length < 1) {
-
-                    const nextNWPos = JSON.parse(world.getDynamicProperty('nextNWPos'))
-
-                    world.setDynamicProperty('nextNWPos',JSON.stringify({
-                        x: nextNWPos.x,
-                        y: nextNWPos.y,
-                        z: nextNWPos.z + Number(mapSize.slice(Number(mapSize.indexOf('y'))+1,Number(mapSize.indexOf('z')))) + 100
-
-                    }))
-
-                    world.getPlayers({ name:player.name})[0].teleport({
-                        x: nextNWPos.x + Number(mapSize.slice(0,Number(mapSize.indexOf('x')))) / 2, 
-                        y: nextNWPos.y + Number(mapSize.slice(Number(mapSize.indexOf('x'))+1,Number(mapSize.indexOf('y')))) / 2,
-                        z: nextNWPos.z + Number(mapSize.slice(Number(mapSize.indexOf('y'))+1,Number(mapSize.indexOf('z')))) / 2
-                    }) 
-                system.runTimeout(() => 
-                    {
-                        console.warn('test')
-                        //world.getDimension("overworld").runCommandAsync('setblock 1000 1 1000 air')
-                       // this.createSite({x:1000,y:0,z:1000},{x:1000,y:10,z:1000},'stone',20)=
-
-                        this.workShops[mapName] = {
-                            id: mapName.replace(' ', '_'),
-                            title: mapName,
-                            key : world.getDynamicProperty('highestWorkshopKey') + 1,
-                            owner: player.name,
-                            builders: [player.name],
-                                privateMap: !privacyToggle,
-                                passcode: passcode,
-                                developmentalState : 'unreleased',
-                                mapVersion : '0.1',
-                                creationVersion : '0.0.6',
-                                compatableGamemodes : ['training'],
-                                archivePos : { 
-                                    northWest :{
-                                        x: nextNWPos.x,
-                                        y: nextNWPos.y,
-                                        z: nextNWPos.z
-                                    },
-                                    southEast : {
-                                        x: nextNWPos.x + Number(mapSize.slice(0,Number(mapSize.indexOf('x')))),
-                                        y: nextNWPos.y + Number(mapSize.slice(Number(mapSize.indexOf('x'))+1,Number(mapSize.indexOf('y')))),
-                                        z: nextNWPos.z + Number(mapSize.slice(Number(mapSize.indexOf('y'))+1,Number(mapSize.indexOf('z'))))
-                                    }
-                                }
-                            }
-                            uploadMapData(this.workShops[mapName])
-                            console.warn('size: '+Number(mapSize.slice(0,Number(mapSize.indexOf('x')))) + '...' + Number(nextNWPos.x) + Number(mapSize.slice(0,Number(mapSize.indexOf('x')))))
-                            console.warn()
-                            this.activeWorkshops[player.name].mapName = mapName;
-                            console.warn(`NW.x: ${this.workShops[this.activeWorkshops[player.name].mapName].archivePos.northWest.x} SE.x: ${this.workShops[this.activeWorkshops[player.name].mapName].archivePos.southEast.x}` )
-                            
-                            world.setDynamicProperty('highestWorkshopKey',world.getDynamicProperty('highestWorkshopKey') + 1)
-                           
-
-                        
-                            
-                         },5)
-                           
-                            system.runTimeout(() => 
-                                {
-                                   world.getDimension("overworld").runCommandAsync(`setblock ${player.location.x} ${player.location.y -2} ${player.location.z} glass`)
-                                    this.createSite(
-                                        {
-                                            x:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.northWest.x,
-                                            y:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.northWest.y,
-                                            z:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.northWest.z
-                                        },
-                                        {
-                                            x:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.southEast.x,
-                                            y:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.southEast.y,
-                                            z:this.workShops[this.activeWorkshops[player.name].mapName].archivePos.southEast.z
-                                        },
-                                        'aa:workshopborder',20)
-                                },10)
-
-
-            }
-            setStation(player,'mapWorkshop')
-            syncPlayerData(player.name,'session')
-                    
-                
-
-        }).catch((e) => {
-            console.error(e, e.stack);
-        });
-
-    },
-
     designMap : function (player,mapName) {
 
         // Remove all visitors
@@ -908,9 +736,6 @@ let workshopManagementSystem = {
         let bounds = this.workShops[this.activeWorkshops[name].mapName].archivePos;
 
         if (pos.x < bounds.northWest.x || pos.x > bounds.southEast.x || pos.y < bounds.northWest.y || pos.y > bounds.southEast.y || pos.z < bounds.northWest.z || pos.z > bounds.southEast.z) {
-            //console.warn('\nbounds.northWest.x: ' + bounds.northWest.x +'\nbounds.northWest.y: ' + bounds.northWest.y + '\nbounds.northWest.z: ' + bounds.northWest.z +
-            //'\n\nbounds.southEast.x: ' + bounds.southEast.x + '\nbounds.southEast.y: ' + bounds.southEast.y + '\nbounds.southEast.z: ' + bounds.southEast.z
-            //)
         console.warn('Block outside of bounds')
         return true
     }
@@ -1510,10 +1335,20 @@ world.beforeEvents.playerBreakBlock.subscribe(eventData => {
 
 })
 
+world.afterEvents.entitySpawn.subscribe((eventData) => {
+    if (eventData.entity.typeId === 'zombie') world.afterEvents.entitySpawn.unsubscribe()
+    //if (sessionPlayerData[eventData.source.name].station !== 'mapWorkshop') return
+    //if ( workshopManagementSystem.boundsCheck(eventData.block.location,eventData.player.name) == true || workshopManagementSystem.activeWorkshops[eventData.player.name].activity === 'browse') {
+    const spawnLocation = eventData.entity.location;
+    console.warn(`Entity spawned. Type: ${eventData.entity.typeId}. Location: ${JSON.stringify(spawnLocation)} Source object: ${JSON.stringify(eventData)}`);
+
+})
+
 
 world.afterEvents.playerPlaceBlock.subscribe(eventData => {
+    if (sessionPlayerData[eventData.player.name].station !== 'mapWorkshop') return
     console.warn('testing block at '+ eventData.block.location.x + ' ' + + eventData.block.location.y + ' ' + + eventData.block.location.z + '..')
-    if (sessionPlayerData[eventData.player.name].station == 'mapWorkshop' && ( workshopManagementSystem.boundsCheck(eventData.block.location,eventData.player.name) == true || workshopManagementSystem.activeWorkshops[eventData.player.name].activity === 'browse')) {
+    if ( workshopManagementSystem.boundsCheck(eventData.block.location,eventData.player.name) == true || workshopManagementSystem.activeWorkshops[eventData.player.name].activity === 'browse') {
         world.getDimension('overworld').fillBlocks(eventData.block.location, eventData.block.location, "minecraft:air")
         console.warn('filled')
         return;
