@@ -396,6 +396,7 @@ let workshopManagementSystem = {
                 
                 mapName = mapName || sourceMapName;
                 builders = builders ? builders.split(':') : this.workShops[sourceMapName].builders;
+                passcode = passcode ? passcode : this.workShops[sourceMapName].passcode
 
                 if (JSON.stringify(builders) !== JSON.stringify(this.workShops[sourceMapName].builders) && mapName === sourceMapName) {
                     console.warn('test')
@@ -449,10 +450,16 @@ let workshopManagementSystem = {
                         buildableMaps.splice(ownedMaps.indexOf(sourceMapName),1)
                         world.setDynamicProperty(`${element}BuildableMaps`,JSON.stringify(buildableMaps))
                     }
+                    for (const element of this.workShops[mapName].builders) {
+                        console.warn(`Adding ${mapName} to ${element}'s buildable maps..`)
+                        let buildableMaps = JSON.parse(world.getDynamicProperty(`${element}BuildableMaps`))
+                        buildableMaps.push(mapName)
+                        world.setDynamicProperty(`${element}BuildableMaps`,JSON.stringify(buildableMaps))
+                    }
 
                     let publicMaps = JSON.parse(world.getDynamicProperty("publicMaps"));
-                    if (this.workShops[sourceMapName].privacyToggle === false) publicMaps.splice(publicMaps.indexOf(sourceMapName),1);
-                    if (this.workShops[mapName].privacyToggle === false) publicMaps.push(mapName);
+                    if (!this.workShops[sourceMapName].privateMap) publicMaps.splice(publicMaps.indexOf(sourceMapName),1);
+                    if (!this.workShops[mapName].privateMap) publicMaps.push(mapName);
                     world.setDynamicProperty(`publicMaps`,JSON.stringify(publicMaps));
 
                     this.workShops[sourceMapName] = null;
@@ -679,12 +686,11 @@ let workshopManagementSystem = {
         this.showForm(player,purpose)
 
     },
-
     modifyMap : function (player,mapName) {
         const form = new ModalFormData()
             .textField(`Map Name`, this.workShops[mapName].title ? this.workShops[mapName].title : `${player.name}'s Map`)
             .textField(`Passcode`, this.workShops[mapName].passcode ? this.workShops[mapName].passcode : 'CURRENTLY NO PASSCODE')
-            .toggle(`Public?`, this.workShops[mapName].privateMap ? !this.workShops[mapName].privateMap : false)
+            .toggle(`Public?`, !this.workShops[mapName].privateMap)
             .textField('Builders (names seperated by colons)', this.workShops[mapName].builders ? JSON.stringify(this.workShops[mapName].builders).replaceAll(",",":").replace("[","").replace("]","").replaceAll('"',"") : `${player.name}:username2`)
             .title(`Metadata Form - ${this.workShops[mapName].id}`)
 
