@@ -392,11 +392,14 @@ let workshopManagementSystem = {
             }
             else if (purpose === 'metadata') {
                 console.warn(JSON.stringify(this.workShops))
-                let [mapName, passcode, privacyToggle,builders] = r.formValues
+                let [mapName, passcode, privacyToggle, builders, developmentalState, mapVersion, compatableGamemodes] = r.formValues
                 
                 mapName = mapName || sourceMapName;
                 builders = builders ? builders.split(':') : this.workShops[sourceMapName].builders;
                 passcode = passcode ? passcode : this.workShops[sourceMapName].passcode
+                developmentalState = developmentalState ? developmentalState : this.workShops[sourceMapName].developmentalState
+                mapVersion = mapVersion ? mapVersion : this.workShops[sourceMapName].mapVersion
+                compatableGamemodes = compatableGamemodes ? compatableGamemodes.split(':') : this.workShops[sourceMapName].compatableGamemodes;
 
                 if (JSON.stringify(builders) !== JSON.stringify(this.workShops[sourceMapName].builders) && mapName === sourceMapName) {
                     console.warn('test')
@@ -425,10 +428,10 @@ let workshopManagementSystem = {
                     builders: builders,
                     privateMap: !privacyToggle,
                     passcode: passcode,
-                    developmentalState : 'unreleased',
-                    mapVersion : '0.1',
+                    developmentalState : developmentalState,
+                    mapVersion : mapVersion,
                     creationVersion : this.workShops[sourceMapName].creationVersion,
-                    compatableGamemodes : ['training'],
+                    compatableGamemodes : compatableGamemodes,
                     archivePos : this.workShops[sourceMapName].archivePos
                 }
                 uploadMapData(this.workShops[mapName]);
@@ -686,13 +689,17 @@ let workshopManagementSystem = {
         this.showForm(player,purpose)
 
     },
+
     modifyMap : function (player,mapName) {
         const form = new ModalFormData()
             .textField(`Map Name`, this.workShops[mapName].title ? this.workShops[mapName].title : `${player.name}'s Map`)
             .textField(`Passcode`, this.workShops[mapName].passcode ? this.workShops[mapName].passcode : 'CURRENTLY NO PASSCODE')
             .toggle(`Public?`, !this.workShops[mapName].privateMap)
             .textField('Builders (names seperated by colons)', this.workShops[mapName].builders ? JSON.stringify(this.workShops[mapName].builders).replaceAll(",",":").replace("[","").replace("]","").replaceAll('"',"") : `${player.name}:username2`)
-            .title(`Metadata Form - ${this.workShops[mapName].id}`)
+            .textField(`Developmental State`, this.workShops[mapName].developmentalState ? this.workShops[mapName].developmentalState : 'unreleased')
+            .textField(`Map Version`, this.workShops[mapName].mapVersion ? this.workShops[mapName].mapVersion : '0.0.1')
+            .textField(`Compatable Gamemodes (Gamemodes seperated by colons)`, this.workShops[mapName].compatableGamemodes ? JSON.stringify(this.workShops[mapName].compatableGamemodes).replaceAll(",",":").replace("[","").replace("]","").replaceAll('"',"") : 'training')
+            .title(`Metadata Form - ID: ${this.workShops[mapName].id} KEY: ${this.workShops[mapName].key}`)
 
         this.formData[player.name].form = form;
         this.showForm(player,'metadata',mapName)
