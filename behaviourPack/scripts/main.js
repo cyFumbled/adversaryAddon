@@ -81,6 +81,9 @@ let commandHandler = {
             requiredPermissionLevel: 1, code: ({source: player}) => {
                 world.getDimension('overworld').runCommandAsync(`gamemode s ${player.name}`);
             }},
+        'leave': {
+            requiredPermissionLevel : 0, code : ({ source: player }) => {workshopManagementSystem.removePlayer(player.name)}
+        },
         'logMap': {
             requiredPermissionLevel: 1, code: ({parameters}) => {
                 if (parameters[0] === 'list' || !parameters[0]) console.warn(world.getDynamicProperty('mapList'));
@@ -192,7 +195,7 @@ let commandHandler = {
             '-4294967295' : 1
         }
 
-        if (this.commandReference[keyword].requiredPermissionLevel > sourcePermissionLevel[source.id]) {
+        if (this.commandReference[keyword].requiredPermissionLevel > sourcePermissionLevel[source.id] || sourcePermissionLevel[source.id] === 0) {
             console.warn(`\nFailed to run command due with an unauthorised permission level.\nsource name: §b${source.name}§7\nkeyword: §b${keyword}§7\nparameters: §b${parameters}§7\ncommand permission level: §b${this.commandReference[keyword].requiredPermissionLevel}§7\nsource permission level: §b${sourcePermissionLevel[source.id]}`)
             return
         }
@@ -699,7 +702,7 @@ let workshopManagementSystem = {
             .textField(`Developmental State`, this.workShops[mapName].developmentalState ? this.workShops[mapName].developmentalState : 'unreleased')
             .textField(`Map Version`, this.workShops[mapName].mapVersion ? this.workShops[mapName].mapVersion : '0.0.1')
             .textField(`Compatable Gamemodes (Gamemodes seperated by colons)`, this.workShops[mapName].compatableGamemodes ? JSON.stringify(this.workShops[mapName].compatableGamemodes).replaceAll(",",":").replace("[","").replace("]","").replaceAll('"',"") : 'training')
-            .title(`Metadata Form - ID: ${this.workShops[mapName].id} KEY: ${this.workShops[mapName].key}`)
+            .title(`ID: ${this.workShops[mapName].id} KEY: ${this.workShops[mapName].key}`)
 
         this.formData[player.name].form = form;
         this.showForm(player,'metadata',mapName)
@@ -742,7 +745,6 @@ let workshopManagementSystem = {
                 }) 
 
     },
-
 
     boundsCheck : function (pos,name) {
 
@@ -1075,6 +1077,7 @@ let stations = {
     mapWorkshop : {players :[], switchCode : function (player) {
         player.getComponent('inventory').container.clearAll()
         world.getDimension("overworld").runCommandAsync(`gamemode c ${player.name}`)
+        player.sendMessage('Run the command "%CUSTOM_PREFIX%leave" to save your map and exit the workshop.')
     }}
 
 }
